@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}首页{% endblock %}
+
+{% block content %}
+<div x-data="{ 
+    selectedPost: null,
+    showModal: false,
+    pageNum: {{ posts.page }},
+    async selectPost(postId) {
+        const response = await fetch(`/post/${postId}`);
+        this.selectedPost = await response.json();
+        this.showModal = true;
+    },
+    closeModal() {
+        this.showModal = false;
+        this.selectedPost = null;
+    },
+    goToPage() {
+        if (this.pageNum < 1) this.pageNum = 1;
+        if (this.pageNum > {{ posts.pages }}) this.pageNum = {{ posts.pages }};
+        window.location.href = `{{ url_for('main.index') }}?page=${this.pageNum}`;
+    }
+}">
+    <!-- 博客列表 -->
+    <div class="grid gap-6">
+        {% for post in posts.items %}
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-2">
+                <a href="{{ url_for('main.get_post', post_id=post.id) }}" 
+                   @click.prevent="selectPost('{{ post.id }}')" 
+                   class="text-blue-600 hover:text-blue-800">
+                    {{ post.title }}
+                </a>
+            </h2>
+            <p class="text-gray-600 mb-4">
+                {% if post.content|length > preview_length %}
+                    {{ post.content[:preview_length] }}...
+                    <span class="text-blue-600 text-sm">[点击标题查看全文]</span>
+                {% else %}
+                    {{ post.content }}
+                {% endif %}
+            </p>
+            <p class="text-sm text-gray-500">发布时间：{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- 分页 -->
+    <div class="mt-8 flex justify-center items-center space-x-4">
+        <div class="flex space-x-2">
+            {% if posts.has_prev %}
+            <a href="{{ url_for('main.index', page=posts.prev_num) }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">上一页</a>
+            {% endif %}
+            
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-600">第</span>
+                <input type="number" 
+                       x-model.number="pageNum"
+                       min="1"
+                       max="{{ posts.pages }}"
+                       class="w-16 px-2 py-1 border rounded focus:outline-none focus:border-blue-500 text-center">
+                <span class="text-gray-600">页 / 共 {{ posts.pages }} 页</span>
+                <button @click="goToPage"
+                        class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600">
+                    跳转
+                </button>
+            </div>
+
+            {% if posts.has_next %}
+            <a href="{{ url_for('main.index', page=posts.next_num) }}" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">下一页</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 文章详情模态框 -->
+    <template x-if="showModal">
+        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+             x-transition
+             @click.self="closeModal">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto" @click.stop>
+                <div class="p-6">
+                    <h2 x-text="selectedPost?.title" class="text-2xl font-bold mb-4"></h2>
+                    <p x-text="selectedPost?.content" class="text-gray-700 mb-4 whitespace-pre-wrap"></p>
+                    <p class="text-sm text-gray-500">
+                        发布时间：<span x-text="selectedPost?.created_at"></span>
+                    </p>
+                </div>
+                <div class="border-t px-6 py-4">
+                    <button @click="closeModal" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        关闭
+                    </button>
+                </div>
+            </div>
+        </div>
+    </template>
+</div>
+{% endblock %} 

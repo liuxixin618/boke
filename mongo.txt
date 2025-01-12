@@ -1,0 +1,90 @@
+# MongoDB 常用命令
+
+## 1. 连接数据库
+mongo
+# 或者
+mongosh
+
+## 2. 查看所有数据库
+show dbs
+
+## 3. 切换数据库
+use personal_website
+
+## 4. 查看所有集合
+show collections
+
+## 5. 查看用户数据
+# 查看所有用户
+db.user.find()
+# 格式化显示
+db.user.find().pretty()
+# 删除指定用户名的用户
+db.user.deleteOne({username: "要删除的用户名"})
+# 删除多个用户（谨慎使用）
+db.user.deleteMany({username: "要删除的用户名"})
+# 删除前先查看确认
+db.user.find({username: "要删除的用户名"}).pretty()
+
+## 6. 查看文章数据
+# 查看所有文章
+db.post.find().pretty()
+
+## 7. 查看网站配置
+db.site_config.find().pretty()
+
+## 8. 统计数据
+# 统计文章数量
+db.post.count()
+
+## 9. 排序和限制
+# 按时间倒序查看最近的10篇文章
+db.post.find().sort({created_at: -1}).limit(10).pretty()
+
+## 10. 条件查询
+# 查看所有可见的文章
+db.post.find({is_visible: true}).pretty()
+
+# 按分类查找文章
+db.post.find({category: "分类名称"}).pretty()
+
+# 查找特定用户名的用户
+db.user.find({username: "admin"}).pretty()
+
+## 11. 退出MongoDB
+exit
+
+## 注意事项：
+1. .pretty() 方法可以让输出的JSON数据更易读
+2. find() 方法不带参数时返回所有记录
+3. sort() 中 1 表示升序，-1 表示降序
+4. limit() 用于限制返回的记录数
+
+## 高级查询示例：
+# 查找标题包含特定文字的文章
+db.post.find({title: /关键词/}).pretty()
+
+# 查找特定日期范围的文章
+db.post.find({
+    created_at: {
+        $gte: ISODate("2024-01-01"),
+        $lt: ISODate("2024-12-31")
+    }
+}).pretty()
+
+# 只返回特定字段
+db.post.find({}, {title: 1, category: 1, _id: 0}).pretty()
+
+## 数据库维护命令：
+# 备份数据库
+mongodump --db personal_website --out /backup/$(date +%Y%m%d)
+
+# 恢复数据库
+mongorestore --db personal_website /backup/20240112/ 
+
+# 删除用户
+# 先查看确认
+db.user.find({username: "test"}).pretty()
+
+# 确认无误后删除
+db.user.deleteOne({username: "test"})

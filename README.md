@@ -291,3 +291,30 @@ ls -la /var/www/blog/app/static
 ## 许可证
 
 MIT License
+
+
+## 补充
+## 重启服务
+sudo systemctl restart blog
+
+## 查看服务状态
+sudo systemctl status blog
+
+## 查看日志
+tail -f /var/www/blog/logs/access.log
+tail -f /var/www/blog/logs/error.log
+
+## 数据库备份
+mongodump --db personal_website --out /backup/$(date +%Y%m%d)
+
+## 数据库恢复
+mongorestore --db personal_website /backup/$(date +%Y%m%d)
+
+## 更新证书
+sudo certbot renew
+
+## 查看证书状态
+sudo certbot status
+
+## 配置自动更新证书
+sudo systemctl enable certbot

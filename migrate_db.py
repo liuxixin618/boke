@@ -3,6 +3,7 @@ from app.models import Post, db
 from datetime import datetime, timezone
 import json
 import os
+from flask_mongoengine import MongoEngine
 
 def backup_collection():
     """备份当前文章数据"""
@@ -90,6 +91,21 @@ def verify_migration():
     except Exception as e:
         print(f'验证失败: {str(e)}')
         return False
+
+def migrate_posts_updated_at():
+    """更新所有没有 updated_at 的文章记录"""
+    print("开始迁移文章的 updated_at 字段...")
+    
+    # 获取所有 updated_at 为空的文章
+    posts = Post.objects(updated_at=None)
+    count = 0
+    
+    for post in posts:
+        post.updated_at = post.created_at
+        post.save()
+        count += 1
+    
+    print(f"迁移完成，共更新了 {count} 篇文章")
 
 def main():
     """主函数"""

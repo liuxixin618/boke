@@ -1,67 +1,166 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 
 {% block title %}网站配置{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-md p-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">网站配置</h1>
-            <div class="space-x-4">
-                <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800">返回仪表盘</a>
-                <a href="{{ url_for('admin.change_password') }}" class="text-blue-600 hover:text-blue-800">修改密码</a>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">网站配置</h2>
+                    
+                    <form method="post">
+                        <!-- 基础配置 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">基础配置</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="site_title" class="form-label">网站标题</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="site_title" 
+                                           name="site_title" 
+                                           value="{{ site_config.site_title }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="content_preview_length" class="form-label">博客内容预览长度（字符数）</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="content_preview_length" 
+                                           name="content_preview_length" 
+                                           value="{{ site_config.content_preview_length }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="posts_per_page" class="form-label">每页显示的博客数量</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="posts_per_page" 
+                                           name="posts_per_page" 
+                                           value="{{ site_config.posts_per_page }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="icp_text" class="form-label">页脚备案信息文本</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="icp_text" 
+                                           name="icp_text" 
+                                           value="{{ site_config.icp_text }}">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="icp_link" class="form-label">备案信息链接地址</label>
+                                    <input type="url" 
+                                           class="form-control" 
+                                           id="icp_link" 
+                                           name="icp_link" 
+                                           value="{{ site_config.icp_link }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 导航栏配置 -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">导航栏配置</h5>
+                            </div>
+                            <div class="card-body">
+                                <!-- 首页 -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">首页</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="nav_home_text" class="form-label">显示文本</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="nav_home_text" 
+                                                   name="nav_home_text" 
+                                                   value="{{ site_config.nav_home_text }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" 
+                                                       class="form-check-input" 
+                                                       id="nav_home_visible" 
+                                                       name="nav_home_visible" 
+                                                       {% if site_config.nav_home_visible %}checked{% endif %}>
+                                                <label class="form-check-label" for="nav_home_visible">
+                                                    显示此项
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 好物分享 -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">好物分享</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="nav_goods_text" class="form-label">显示文本</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="nav_goods_text" 
+                                                   name="nav_goods_text" 
+                                                   value="{{ site_config.nav_goods_text }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" 
+                                                       class="form-check-input" 
+                                                       id="nav_goods_visible" 
+                                                       name="nav_goods_visible" 
+                                                       {% if site_config.nav_goods_visible %}checked{% endif %}>
+                                                <label class="form-check-label" for="nav_goods_visible">
+                                                    显示此项
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 关于作者 -->
+                                <div class="mb-4">
+                                    <h6 class="mb-3">关于作者</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="nav_about_text" class="form-label">显示文本</label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="nav_about_text" 
+                                                   name="nav_about_text" 
+                                                   value="{{ site_config.nav_about_text }}">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check mt-4">
+                                                <input type="checkbox" 
+                                                       class="form-check-input" 
+                                                       id="nav_about_visible" 
+                                                       name="nav_about_visible" 
+                                                       {% if site_config.nav_about_visible %}checked{% endif %}>
+                                                <label class="form-check-label" for="nav_about_visible">
+                                                    显示此项
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">保存</button>
+                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">返回</a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                {% for message in messages %}
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-        
-        <form method="POST" class="space-y-6">
-            {% for config in configs %}
-            <div>
-                <label for="config_{{ config.key }}" class="block text-gray-700 mb-2">
-                    {{ config.description }}
-                </label>
-                {% if config.type == 'int' %}
-                <input type="number" 
-                       id="config_{{ config.key }}" 
-                       name="config_{{ config.key }}"
-                       value="{{ config.value }}"
-                       required
-                       min="1"
-                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                {% elif config.type == 'url' %}
-                <input type="url" 
-                       id="config_{{ config.key }}" 
-                       name="config_{{ config.key }}"
-                       value="{{ config.value }}"
-                       required
-                       placeholder="https://"
-                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                {% else %}
-                <input type="text" 
-                       id="config_{{ config.key }}" 
-                       name="config_{{ config.key }}"
-                       value="{{ config.value }}"
-                       required
-                       class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
-                {% endif %}
-            </div>
-            {% endfor %}
-            
-            <div class="flex justify-end">
-                <button type="submit" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                    保存配置
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 {% endblock %} 

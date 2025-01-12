@@ -6,6 +6,7 @@ Flask==2.0.3
 Flask-Login==0.6.3
 flask-mongoengine==1.0.0
 Flask-WTF==1.2.2
+flask-moment==1.0.5
 gunicorn==21.2.0
 idna==3.10
 itsdangerous==2.2.0

@@ -3,6 +3,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from . import admin
 from ..models import User, Post, SiteConfig
 
+@admin.route('/')
+@login_required
+def index():
+    return redirect(url_for('admin.dashboard'))
+
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

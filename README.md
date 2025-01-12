@@ -164,13 +164,13 @@ After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/var/www/blog
-Environment="PATH=/var/www/blog/venv/bin"
+WorkingDirectory=/var/www/blog/boke
+Environment="PATH=/var/www/blog/boke/venv/bin"
 Environment="LANG=zh_CN.UTF-8"
 Environment="LC_ALL=zh_CN.UTF-8"
 Environment="LC_LANG=zh_CN.UTF-8"
-EnvironmentFile=/var/www/blog/.env
-ExecStart=/var/www/blog/venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 wsgi:app --access-logfile /var/www/blog/logs/access.log --error-logfile /var/www/blog/logs/error.log
+EnvironmentFile=/var/www/blog/boke/.env
+ExecStart=/var/www/blog/boke/venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 wsgi:app --access-logfile /var/www/blog/logs/access.log --error-logfile /var/www/blog/logs/error.log
 Restart=always
 
 [Install]
@@ -198,6 +198,7 @@ sudo ufw allow ssh
 ```bash
 # 激活虚拟环境
 source /var/www/blog/venv/bin/activate
+venv\Scripts\activate
 
 # 运行 Python 交互式环境
 python3

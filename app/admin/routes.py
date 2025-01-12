@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from . import admin
 from ..models import User, Post, SiteConfig
+from datetime import datetime, timezone
 
 @admin.route('/')
 @login_required
@@ -30,7 +31,8 @@ def logout():
 @admin.route('/dashboard')
 @login_required
 def dashboard():
-    posts = Post.objects.order_by('-created_at')
+    # 使用模型中定义的默认排序
+    posts = Post.objects.all()
     return render_template('admin/dashboard.html', posts=posts)
 
 @admin.route('/post/new', methods=['GET', 'POST'])
@@ -52,11 +54,26 @@ def new_post():
 def edit_post(post_id):
     post = Post.objects(id=post_id).first_or_404()
     if request.method == 'POST':
-        post.title = request.form.get('title')
-        post.content = request.form.get('content')
-        post.category = request.form.get('category')
-        post.is_visible = bool(request.form.get('is_visible'))
-        post.save()
+        new_title = request.form.get('title')
+        new_content = request.form.get('content')
+        new_category = request.form.get('category')
+        new_is_visible = bool(request.form.get('is_visible'))
+        
+        # 检查是否有实际修改
+        if (post.title != new_title or 
+            post.content != new_content or 
+            post.category != new_category or 
+            post.is_visible != new_is_visible):
+            
+            post.title = new_title
+            post.content = new_content
+            post.category = new_category
+            post.is_visible = new_is_visible
+            post.updated_at = datetime.now(timezone.utc)
+            post.save()
+            flash('文章已更新')
+        else:
+            flash('文章内容未发生变化')
         return redirect(url_for('admin.dashboard'))
     return render_template('admin/edit_post.html', post=post)
 
@@ -65,6 +82,26 @@ def edit_post(post_id):
 def delete_post(post_id):
     post = Post.objects(id=post_id).first_or_404()
     post.delete()
+    return redirect(url_for('admin.dashboard'))
+
+@admin.route('/post/toggle_pin/<post_id>')
+@login_required
+def toggle_pin(post_id):
+    post = Post.objects(id=post_id).first_or_404()
+    
+    if post.is_pinned:
+        # 取消置顶
+        post.is_pinned = False
+        post.save()
+        flash('文章已取消置顶')
+    else:
+        # 先取消其他文章的置顶状态
+        Post.objects(is_pinned=True).update(is_pinned=False)
+        # 设置当前文章为置顶
+        post.is_pinned = True
+        post.save()
+        flash('文章已置顶')
+    
     return redirect(url_for('admin.dashboard'))
 
 @admin.route('/settings', methods=['GET', 'POST'])

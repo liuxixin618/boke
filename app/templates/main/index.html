@@ -30,6 +30,9 @@
                 <a href="{{ url_for('main.get_post', post_id=post.id) }}" 
                    @click.prevent="selectPost('{{ post.id }}')" 
                    class="text-blue-600 hover:text-blue-800">
+                    {% if post.is_pinned %}
+                    <span class="inline-block align-middle mr-1">📌</span>
+                    {% endif %}
                     {{ post.title }}
                 </a>
             </h2>
@@ -41,7 +44,12 @@
                     {{ post.content }}
                 {% endif %}
             </p>
-            <p class="text-sm text-gray-500">发布时间：{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            <div class="text-sm text-gray-500">
+                <span>发布时间：{{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                {% if post.updated_at %}
+                    <span class="ml-4">最后更新：{{ post.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                {% endif %}
+            </div>
         </div>
         {% endfor %}
     </div>

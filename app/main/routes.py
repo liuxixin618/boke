@@ -17,5 +17,6 @@ def get_post(post_id):
     return jsonify({
         'title': post.title,
         'content': post.content,
-        'created_at': post.created_at.strftime('%Y-%m-%d %H:%M')
+        'created_at': post.created_at.strftime('%Y-%m-%d %H:%M'),
+        'updated_at': post.updated_at.strftime('%Y-%m-%d %H:%M') if post.updated_at else None
     }) 

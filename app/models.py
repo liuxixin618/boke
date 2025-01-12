@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from flask_mongoengine import MongoEngine
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -19,12 +19,19 @@ class Post(db.Document):
     title = db.StringField(required=True)
     content = db.StringField(required=True)
     category = db.StringField(required=True)
-    created_at = db.DateTimeField(default=datetime.utcnow)
+    created_at = db.DateTimeField(default=datetime.now(timezone.utc))
+    updated_at = db.DateTimeField(default=None)
     is_visible = db.BooleanField(default=True)
+    is_pinned = db.BooleanField(default=False)
     
     meta = {
-        'ordering': ['-created_at']
+        'collection': 'post',
+        'ordering': ['-is_pinned', '-updated_at', '-created_at']
     }
+
+    def get_display_time(self):
+        """获取显示时间，优先返回更新时间，如果没有则返回创建时间"""
+        return self.updated_at if self.updated_at else self.created_at
 
 class SiteConfig(db.Document):
     key = db.StringField(required=True, unique=True)

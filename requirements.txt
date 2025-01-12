@@ -1,56 +1,19 @@
-blinker==1.9.0
-boltons @ file:///C:/ci_311/boltons_1677729932371/work
-brotlipy==0.7.0
-certifi @ file:///C:/b/abs_36eb5mzhph/croot/certifi_1690232276943/work/certifi
-cffi @ file:///C:/ci_311/cffi_1676423759166/work
-charset-normalizer @ file:///tmp/build/80754af9/charset-normalizer_1630003229654/work
 click==7.1.2
-colorama @ file:///C:/ci_311/colorama_1676422310965/work
-conda @ file:///C:/b/abs_04cd8uayv2/croot/conda_1696257511532/work
-conda-content-trust @ file:///C:/ci_311/conda-content-trust_1676467587370/work
-conda-libmamba-solver @ file:///C:/b/abs_a4898ikyjr/croot/conda-libmamba-solver_1696257577002/work/src
-conda-package-handling @ file:///C:/b/abs_b9wp3lr1gn/croot/conda-package-handling_1691008700066/work
-conda_package_streaming @ file:///C:/b/abs_6c28n38aaj/croot/conda-package-streaming_1690988019210/work
-cryptography @ file:///C:/b/abs_b28tzldafl/croot/cryptography_1686613103834/work
 dnspython==2.7.0
 email_validator==2.2.0
-et-xmlfile==1.1.0
-Flask==1.1.4
+Flask==2.0.3
 Flask-Login==0.6.3
-flask-mongoengine==0.9.5
+flask-mongoengine==1.0.0
 Flask-WTF==1.2.2
-greenlet==3.1.1
-idna @ file:///C:/ci_311/idna_1676424932545/work
-itsdangerous==1.1.0
-Jinja2==2.11.3
-jsonpatch @ file:///tmp/build/80754af9/jsonpatch_1615747632069/work
-jsonpointer==2.1
-libmambapy @ file:///C:/b/abs_71g8gec0dd/croot/mamba-split_1694187821755/work/libmambapy
-MarkupSafe==2.0.1
-menuinst @ file:///C:/ci_311/menuinst_1678730372782/work
-mongoengine==0.29.1
-numpy==2.1.1
-openpyxl==3.1.5
-packaging @ file:///C:/b/abs_28t5mcoltc/croot/packaging_1693575224052/work
-pandas==2.2.2
-pluggy @ file:///C:/ci_311/pluggy_1676422178143/work
-pycosat @ file:///C:/ci_311/pycosat_1676438455539/work
-pycparser @ file:///tmp/build/80754af9/pycparser_1636541352034/work
-pymongo==4.10.1
-pyOpenSSL @ file:///C:/b/abs_08f38zyck4/croot/pyopenssl_1690225407403/work
-PySocks @ file:///C:/ci_311/pysocks_1676425991111/work
-python-dateutil==2.9.0.post0
-pytz==2024.2
-requests @ file:///C:/b/abs_316c2inijk/croot/requests_1690400295842/work
-ruamel.yaml @ file:///C:/ci_311/ruamel.yaml_1676439214109/work
-six @ file:///tmp/build/80754af9/six_1644875935023/work
-SQLAlchemy==2.0.36
-tqdm @ file:///C:/b/abs_f76j9hg7pv/croot/tqdm_1679561871187/work
-truststore @ file:///C:/b/abs_55z7b3r045/croot/truststore_1695245455435/work
-typing_extensions==4.12.2
-tzdata==2024.1
-urllib3 @ file:///C:/b/abs_889_loyqv4/croot/urllib3_1686163174463/work
-Werkzeug==1.0.1
-win-inet-pton @ file:///C:/ci_311/win_inet_pton_1676425458225/work
+gunicorn==21.2.0
+idna==3.10
+itsdangerous==2.2.0
+Jinja2==3.1.5
+MarkupSafe==3.0.2
+mongoengine==0.24.2
+packaging==24.2
+pymongo==4.1.1
+python-dotenv==1.0.0
+uWSGI==2.0.28
+Werkzeug==2.0.3
 WTForms==3.2.1
-zstandard==0.19.0

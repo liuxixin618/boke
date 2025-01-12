@@ -1,3 +1,4 @@
+# Required packages
 click==7.1.2
 dnspython==2.7.0
 email_validator==2.2.0
@@ -14,6 +15,8 @@ mongoengine==0.24.2
 packaging==24.2
 pymongo==4.1.1
 python-dotenv==1.0.0
-uWSGI==2.0.28
 Werkzeug==2.0.3
 WTForms==3.2.1
+
+# Optional packages (Linux/Unix only)
+# uWSGI==2.0.28

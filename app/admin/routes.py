@@ -1,22 +1,20 @@
 import os
-from flask import render_template, redirect, url_for, request, flash, jsonify, send_from_directory, current_app
+from flask import render_template, redirect, url_for, request, flash, jsonify, send_from_directory, current_app, send_file
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
 from ..models import Admin, Post, SiteConfig, get_beijing_time
 from datetime import datetime, timezone, timedelta
 import uuid
+from pathlib import Path
 
 def ensure_upload_folder():
     """确保上传文件夹存在，并返回正确的路径"""
-    upload_folder = current_app.config.get('UPLOAD_FOLDER')
-    if not upload_folder:
-        # 如果配置中没有设置，使用默认路径
-        upload_folder = os.path.join(current_app.root_path, 'uploads')
-        current_app.config['UPLOAD_FOLDER'] = upload_folder
-    
-    # 确保目录存在
-    os.makedirs(upload_folder, exist_ok=True)
+    # 使用项目根目录下的 uploads 文件夹
+    base_dir = Path(current_app.root_path).parent
+    upload_folder = base_dir / 'uploads'
+    upload_folder.mkdir(parents=True, exist_ok=True)
+    current_app.config['UPLOAD_FOLDER'] = str(upload_folder)
     return upload_folder
 
 # 允许的文件类型
@@ -39,8 +37,8 @@ def save_file(file):
             
             # 获取上传目录并保存文件
             upload_folder = ensure_upload_folder()
-            file_path = os.path.join(upload_folder, stored_filename)
-            file.save(file_path)
+            file_path = upload_folder / stored_filename
+            file.save(str(file_path))
             
             return {
                 'filename': original_filename,  # 使用原始文件名
@@ -230,10 +228,10 @@ def delete_post(post_id):
         if post.attachments:
             upload_folder = ensure_upload_folder()
             for attachment in post.attachments:
-                file_path = os.path.join(upload_folder, attachment['stored_filename'])
+                file_path = upload_folder / attachment['stored_filename']
                 try:
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
+                    if file_path.exists():
+                        file_path.unlink()
                 except Exception as e:
                     current_app.logger.error(f"Error deleting attachment {attachment['stored_filename']}: {str(e)}")
         
@@ -319,14 +317,15 @@ def download_attachment(post_id, filename):
             return '附件不存在', 404
         
         upload_folder = ensure_upload_folder()
-        if not os.path.exists(os.path.join(upload_folder, filename)):
+        file_path = upload_folder / filename
+        
+        if not file_path.exists():
             return '文件不存在', 404
             
-        return send_from_directory(
-            upload_folder,
-            filename,
-            as_attachment=True,
-            download_name=attachment['filename']
+        return send_file(
+            str(file_path),
+            download_name=attachment['filename'],
+            as_attachment=True
         )
         
     except Exception as e:
@@ -344,9 +343,9 @@ def delete_attachment(post_id, filename):
             if attachment['stored_filename'] == filename:
                 # 删除文件
                 try:
-                    file_path = os.path.join(ensure_upload_folder(), filename)
-                    if os.path.exists(file_path):
-                        os.remove(file_path)
+                    file_path = upload_folder / filename
+                    if file_path.exists():
+                        file_path.unlink()
                 except OSError as e:
                     current_app.logger.error(f"File delete error: {str(e)}")
                 

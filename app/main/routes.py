@@ -2,6 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, send_file,
 from . import main
 from ..models import Post, SiteConfig
 import os
+from pathlib import Path
 
 @main.route('/')
 def index():
@@ -43,11 +44,17 @@ def download_attachment(filename):
             flash('文件不存在或已被删除', 'error')
             return redirect(url_for('main.index'))
             
-        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        if os.path.exists(file_path):
-            return send_file(file_path, 
-                           download_name=attachment['filename'],
-                           as_attachment=True)
+        # 使用项目根目录下的 uploads 文件夹
+        base_dir = Path(current_app.root_path).parent
+        upload_folder = base_dir / 'uploads'
+        file_path = upload_folder / filename
+        
+        if file_path.exists():
+            return send_file(
+                str(file_path),
+                download_name=attachment['filename'],
+                as_attachment=True
+            )
         else:
             flash('文件不存在或已被删除', 'error')
             return redirect(url_for('main.index'))

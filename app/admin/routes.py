@@ -18,7 +18,18 @@ def ensure_upload_folder():
     return upload_folder
 
 # 允许的文件类型
-ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx', 'txt', 'zip'}
+ALLOWED_EXTENSIONS = {
+    # 文档类
+    'pdf', 'doc', 'docx', 'txt',
+    # 压缩文件
+    'zip', 'rar', '7z',
+    # 图片文件
+    'jpg', 'jpeg', 'png', 'gif', 'webp',
+    # 应用程序
+    'apk',
+    # Excel文件
+    'xls', 'xlsx'
+}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

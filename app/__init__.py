@@ -93,6 +93,10 @@ def load_user(user_id):
 def create_app(config_name='development'):
     app = Flask(__name__)
     app.config.from_object(config[config_name])
+    
+    # 设置最大上传文件大小为 64MB
+    app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
+    
     config[config_name].init_app(app)
 
     moment.init_app(app)

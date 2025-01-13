@@ -352,6 +352,7 @@ def delete_attachment(post_id, filename):
             if attachment['stored_filename'] == filename:
                 # 删除文件
                 try:
+                    upload_folder = ensure_upload_folder()  # 获取正确的上传文件夹路径
                     file_path = upload_folder / filename
                     if file_path.exists():
                         file_path.unlink()

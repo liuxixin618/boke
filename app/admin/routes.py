@@ -218,7 +218,7 @@ def edit_post(post_id):
         flash('操作失败，请重试')
         return redirect(url_for('admin.dashboard'))
 
-@admin.route('/post/delete/<post_id>')
+@admin.route('/post/<post_id>/delete', methods=['POST'])
 @login_required
 def delete_post(post_id):
     try:
@@ -237,12 +237,10 @@ def delete_post(post_id):
         
         # 删除文章记录
         post.delete()
-        flash('文章及其附件已删除')
-        return redirect(url_for('admin.dashboard'))
+        return jsonify({'message': '文章及其附件已删除'})
     except Exception as e:
         current_app.logger.error(f"Delete post error: {str(e)}")
-        flash('删除失败，请重试')
-        return redirect(url_for('admin.dashboard'))
+        return jsonify({'error': '删除失败，请重试'}), 500
 
 @admin.route('/settings', methods=['GET', 'POST'])
 @login_required

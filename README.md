@@ -1,320 +1,249 @@
-# Flask 个人博客系统
+# 个人博客系统
 
-一个使用 Flask 和 MongoDB 构建的个人博客系统。
+这是一个基于 Flask 和 MongoDB 开发的个人博客系统，支持文章管理、文件上传、搜索等功能。
 
 ## 功能特点
 
-- 前台展示博客文章
-- 后台管理系统
-- 文章的增删改查
-- 支持文章预览和分页
-- 可配置的网站设置
-- 响应式设计
+- 文章管理
+  - 支持文章的创建、编辑、删除
+  - 支持文章置顶功能
+  - 支持文章可见性控制
+  - 支持文章搜索功能（标题模糊匹配）
+  
+- 文件管理
+  - 支持多文件上传
+  - 支持文件类型验证
+  - 支持批量下载附件
+  
+- 系统配置
+  - 支持网站标题配置
+  - 支持导航栏自定义
+  - 支持分页设置
+  - 支持内容预览长度设置
+
+## 技术栈
+
+- 后端：Flask + MongoDB
+- 前端：Bootstrap 5 + jQuery
+- 数据库：MongoDB
+- Web服务器：uWSGI + Nginx
 
 ## 系统要求
 
 - Python 3.8+
-- MongoDB 4.4+
-- Nginx
-- Ubuntu 20.04+ (推荐)
+- MongoDB 4.0+
+- Linux 系统（生产环境）
 
-## 目录结构
+## 本地开发环境搭建
 
-```
-/var/www/blog/              # 项目根目录
-├── app/                    # 应用主目录
-│   ├── __init__.py        # 应用初始化
-│   ├── config.py          # 配置文件
-│   ├── models.py          # 数据模型
-│   ├── admin/             # 管理后台模块
-│   │   ├── __init__.py
-│   │   └── routes.py      # 后台路由
-│   ├── main/              # 前台模块
-│   │   ├── __init__.py
-│   │   └── routes.py      # 前台路由
-│   ├── static/            # 静态文件
-│   │   └── icons/         # 图标文件
-│   └── templates/         # 模板文件
-│       ├── base.html      # 基础模板
-│       ├── admin/         # 后台模板
-│       └── main/          # 前台模板
-├── venv/                  # Python 虚拟环境
-├── logs/                  # 日志目录
-├── .env                   # 环境变量配置
-├── requirements.txt       # Python 依赖
-├── run.py                 # 开发服务器启动脚本
-└── wsgi.py               # WSGI 应用入口
-
-/etc/nginx/sites-available/ # Nginx 配置目录
-└── blog                   # 网站 Nginx 配置文件
-
-/etc/systemd/system/       # Systemd 服务目录
-└── blog.service          # 应用服务配置文件
-```
-
-## 部署步骤
-
-### 1. 系统准备
-
+1. 克隆项目：
 ```bash
-# 更新系统
-sudo apt update
-sudo apt upgrade -y
-
-# 安装必要的系统包
-sudo apt install -y python3 python3-pip python3-venv nginx mongodb git
-
-# 启动并启用 MongoDB
-sudo systemctl start mongodb
-sudo systemctl enable mongodb
-
-# 安装中文语言包
-sudo apt-get install language-pack-zh-hans
-sudo locale-gen zh_CN.UTF-8
-sudo update-locale LANG=zh_CN.UTF-8 LC_ALL=zh_CN.UTF-8
+git clone [项目地址]
+cd [项目目录]
 ```
 
-### 2. 创建项目目录
-
+2. 创建虚拟环境：
 ```bash
-# 创建项目目录
-sudo mkdir -p /var/www/blog
-sudo mkdir -p /var/www/blog/logs
-
-# 设置目录权限
-sudo chown -R www-data:www-data /var/www/blog
+python -m venv venv
+source venv/bin/activate  # Linux
+venv\Scripts\activate     # Windows
 ```
 
-### 3. 配置 Python 环境
-
+3. 安装依赖：
 ```bash
-# 切换到项目目录
-cd /var/www/blog
-
-# 创建虚拟环境
-python3 -m venv venv
-
-# 激活虚拟环境
-source venv/bin/activate
-
-# 安装依赖
 pip install -r requirements.txt
 ```
 
-### 4. 配置环境变量
-
-创建 `/var/www/blog/.env` 文件：
-
+4. 创建配置文件：
 ```bash
-SECRET_KEY=your-very-secret-key-here
-MONGODB_DB=personal_website
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
-MONGODB_USERNAME=your-username
-MONGODB_PASSWORD=your-password
-FLASK_ENV=production
+cp .env.example .env
 ```
 
-### 5. 配置 Nginx
+5. 修改 .env 文件：
+```
+SECRET_KEY=your-secret-key
+MONGODB_URI=mongodb://localhost:27017/blog
+```
 
-创建 `/etc/nginx/sites-available/blog` 文件：
+6. 初始化数据库：
+```bash
+python init_db.py
+```
 
+7. 运行开发服务器：
+```bash
+python run.py
+```
+
+## Linux 生产环境部署
+
+1. 安装系统依赖：
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install python3-pip python3-dev nginx
+sudo apt-get install build-essential python3-venv
+
+# CentOS/RHEL
+sudo yum install python3-pip python3-devel nginx
+sudo yum groupinstall 'Development Tools'
+```
+
+2. 创建项目目录：
+```bash
+sudo mkdir /var/www/blog
+sudo chown $USER:$USER /var/www/blog
+```
+
+3. 克隆项目并设置环境：
+```bash
+cd /var/www/blog
+git clone [项目地址] .
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+4. 配置 uWSGI：
+使用项目中的 `bk_uwsgi.ini` 文件，内容如下：
+```ini
+[uwsgi]
+# 项目根目录
+chdir = /var/www/blog
+
+# Python 虚拟环境
+home = /var/www/blog/venv
+
+# 项目的 wsgi 文件
+module = wsgi:app
+
+# 进程相关的设置
+# 主进程
+master = true
+# 最大数量的工作进程
+processes = 4
+
+# 监听的端口
+socket = /var/www/blog/blog.sock
+# socket 权限设置
+chmod-socket = 666
+# 退出的时候是否清理环境
+vacuum = true
+
+# 日志相关
+daemonize = /var/www/blog/logs/uwsgi.log
+log-reopen = true
+log-maxsize = 50000000
+
+# 其他优化
+harakiri = 30
+buffer-size = 32768
+post-buffering = 4096
+```
+
+5. 配置 Nginx：
+```bash
+sudo nano /etc/nginx/sites-available/blog
+```
+
+添加以下内容：
 ```nginx
 server {
     listen 80;
-    server_name your-domain.com;  # 替换为你的域名
-    charset utf-8;
-
-    access_log /var/www/blog/logs/access.log;
-    error_log /var/www/blog/logs/error.log;
+    server_name your_domain.com;  # 替换为你的域名
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        include uwsgi_params;
+        uwsgi_pass unix:/var/www/blog/blog.sock;
     }
 
     location /static {
         alias /var/www/blog/app/static;
-        expires 30d;
-        charset utf-8;
-        add_header Content-Type "text/plain; charset=utf-8";
+    }
+
+    location /uploads {
+        alias /var/www/blog/uploads;
+        add_header Content-Disposition "attachment";
     }
 }
 ```
 
-启用网站配置：
-
+6. 启用网站配置：
 ```bash
-sudo ln -s /etc/nginx/sites-available/blog /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/blog /etc/nginx/sites-enabled
 sudo nginx -t
 sudo systemctl restart nginx
 ```
 
-### 6. 配置应用服务
+7. 创建 systemd 服务：
+```bash
+sudo nano /etc/systemd/system/blog.service
+```
 
-创建 `/etc/systemd/system/blog.service` 文件：
-
+添加以下内容：
 ```ini
 [Unit]
-Description=Personal Blog
+Description=uWSGI instance to serve blog
 After=network.target
 
 [Service]
 User=www-data
-WorkingDirectory=/var/www/blog/boke
-Environment="PATH=/var/www/blog/boke/venv/bin"
-Environment="LANG=zh_CN.UTF-8"
-Environment="LC_ALL=zh_CN.UTF-8"
-Environment="LC_LANG=zh_CN.UTF-8"
-EnvironmentFile=/var/www/blog/boke/.env
-ExecStart=/var/www/blog/boke/venv/bin/gunicorn -w 4 -b 127.0.0.1:8000 wsgi:app --access-logfile /var/www/blog/logs/access.log --error-logfile /var/www/blog/logs/error.log
-Restart=always
+Group=www-data
+WorkingDirectory=/var/www/blog
+Environment="PATH=/var/www/blog/venv/bin"
+ExecStart=/var/www/blog/venv/bin/uwsgi --ini bk_uwsgi.ini
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-启动服务：
-
+8. 启动服务：
 ```bash
-sudo systemctl daemon-reload
 sudo systemctl start blog
 sudo systemctl enable blog
 ```
 
-### 7. 配置防火墙
+## 目录结构
 
-```bash
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw allow ssh
+```
+.
+├── app/                    # 应用主目录
+│   ├── admin/             # 管理后台模块
+│   ├── main/              # 前台模块
+│   ├── static/            # 静态文件
+│   ├── templates/         # 模板文件
+│   ├── __init__.py        # 应用初始化
+│   ├── models.py          # 数据模型
+│   └── context_processors.py  # 上下文处理器
+├── uploads/               # 上传文件目录
+├── logs/                  # 日志目录
+├── config.py             # 配置文件
+├── requirements.txt      # Python 依赖
+├── bk_uwsgi.ini         # uWSGI 配置
+└── wsgi.py              # WSGI 入口文件
 ```
 
-### 8. 初始化数据库
+## 安全注意事项
 
-```bash
-# 激活虚拟环境
-source /var/www/blog/venv/bin/activate
-venv\Scripts\activate
+1. 确保修改 `.env` 文件中的 `SECRET_KEY`
+2. 配置 MongoDB 访问权限
+3. 设置适当的文件权限
+4. 配置 SSL 证书（推荐使用 Let's Encrypt）
+5. 定期备份数据
 
-# 运行 Python 交互式环境
-python3
+## 维护建议
 
-# 在 Python 环境中执行
-from app import create_app
-from app.models import User
-
-app = create_app()
-with app.app_context():
-    # 创建管理员用户
-    if not User.objects(username='admin').first():
-        user = User(username='admin')
-        user.set_password('admin')  # 记得修改密码
-        user.save()
-```
-
-## 维护命令
-
-### 查看服务状态
-```bash
-sudo systemctl status blog
-sudo systemctl status nginx
-sudo systemctl status mongodb
-```
-
-### 查看日志
-```bash
-tail -f /var/www/blog/logs/access.log
-tail -f /var/www/blog/logs/error.log
-```
-
-### 重启服务
-```bash
-sudo systemctl restart blog
-sudo systemctl restart nginx
-sudo systemctl restart mongodb
-```
-
-### 数据库备份
-```bash
-mongodump --db personal_website --out /backup/$(date +%Y%m%d)
-```
-
-## 安全建议
-
-1. 修改默认管理员密码
-2. 使用强密钥（SECRET_KEY）
-3. 配置 SSL 证书启用 HTTPS
-4. 定期更新系统和依赖包
-5. 定期备份数据库
-6. 配置日志轮转
-7. 监控服务器资源使用情况
-
-## 常见问题
-
-### 1. 中文显示问题
-确保所有 Python 文件都添加了 UTF-8 编码声明：
-```python
-# -*- coding: utf-8 -*-
-```
-
-### 2. 权限问题
-检查目录权限：
-```bash
-sudo chown -R www-data:www-data /var/www/blog
-sudo chmod -R 755 /var/www/blog
-```
-
-### 3. 服务无法启动
-检查日志文件：
-```bash
-sudo journalctl -u blog.service
-```
-
-### 4. 静态文件无法访问
-检查 Nginx 配置和目录权限：
-```bash
-sudo nginx -t
-ls -la /var/www/blog/app/static
-```
-
-## 更新说明
-
-- v1.0.0 (2024-01-01)
-  - 初始版本发布
-  - 基本的博客功能
-  - 后台管理系统
+1. 定期检查日志文件
+2. 配置日志轮转
+3. 定期更新依赖包
+4. 配置监控系统
+5. 设置自动备份
 
 ## 许可证
 
-MIT License
+[选择合适的许可证]
 
+## 作者
 
-## 补充
-## 重启服务
-sudo systemctl restart blog
-
-## 查看服务状态
-sudo systemctl status blog
-
-## 查看日志
-tail -f /var/www/blog/logs/access.log
-tail -f /var/www/blog/logs/error.log
-
-## 数据库备份
-mongodump --db personal_website --out /backup/$(date +%Y%m%d)
-
-## 数据库恢复
-mongorestore --db personal_website /backup/$(date +%Y%m%d)
-
-## 更新证书
-sudo certbot renew
-
-## 查看证书状态
-sudo certbot status
-
-## 配置自动更新证书
-sudo systemctl enable certbot
+[作者信息]
+老司机左塞

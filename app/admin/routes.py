@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
-from ..models import Admin, Post, SiteConfig, get_utc_time
+from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -196,8 +196,14 @@ def dashboard():
             self.page = page
             self.per_page = per_page
             self.total = total
-            self.items = posts
+            self.items = []
             self.pages = (total + per_page - 1) // per_page
+            
+            # 转换时间为本地时间
+            for post in posts:
+                post.created_at = convert_to_local_time(post.created_at)
+                post.updated_at = convert_to_local_time(post.updated_at)
+                self.items.append(post)
             
         @property
         def has_prev(self):
@@ -243,14 +249,8 @@ def dashboard():
 @admin.route('/post/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
-    """
-    创建新文章
-    
-    GET请求：显示创建文章表单
-    POST请求：处理文章创建
-    """
+    """创建新文章"""
     if request.method == 'POST':
-        # 清理并验证输入
         title = sanitize_string(request.form.get('title'))
         content = sanitize_string(request.form.get('content'))
         category = sanitize_string(request.form.get('category'))
@@ -262,12 +262,12 @@ def new_post():
             flash('标题和内容不能为空')
             return render_template('admin/edit_post.html')
         
-        # 创建文章
+        # 创建文章，默认可见
         post = Post(
             title=title,
             content=content,
             category=category,
-            is_visible=bool(request.form.get('is_visible')),
+            is_visible=True,  # 默认可见
             updated_at=get_utc_time()
         )
         
@@ -337,12 +337,6 @@ def edit_post(post_id):
                 current_app.logger.info("文章内容已更新")
                 has_changes = True
                 post.content = content
-                
-            is_visible = bool(request.form.get('is_visible'))
-            if post.is_visible != is_visible:
-                current_app.logger.info(f"文章可见性更新: {post.is_visible} -> {is_visible}")
-                has_changes = True
-                post.is_visible = is_visible
             
             # 处理新上传的附件
             files = request.files.getlist('attachments')
@@ -645,4 +639,27 @@ def admin_change_password():
         
     except Exception as e:
         current_app.logger.error(f"修改管理员密码失败: {str(e)}")
-        return '操作失败，请重试', 500 
+        return '操作失败，请重试', 500
+
+@admin.route('/post/<post_id>/visibility', methods=['POST'])
+@login_required
+def toggle_visibility(post_id):
+    """
+    切换文章的可见状态
+    
+    Args:
+        post_id: 文章ID
+    """
+    try:
+        current_app.logger.info(f"开始切换文章可见状态，ID: {post_id}")
+        post = Post.objects(id=post_id).first_or_404()
+        data = request.get_json()
+        is_visible = data.get('is_visible', True)
+        
+        current_app.logger.info(f"更新文章可见状态: {is_visible}")
+        Post.objects(id=post_id).update(is_visible=is_visible)
+        
+        return '', 204
+    except Exception as e:
+        current_app.logger.error(f"切换文章可见状态失败: {str(e)}")
+        return 'Internal server error', 500 

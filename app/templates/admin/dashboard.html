@@ -3,153 +3,221 @@
 {% block title %}仪表盘{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2>文章管理</h2>
-                <a href="{{ url_for('admin.new_post') }}" class="btn btn-primary">
-                    <i class="bi bi-plus-lg"></i> 新建文章
-                </a>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>标题</th>
-                            <th>创建时间</th>
-                            <th>更新时间</th>
-                            <th>状态</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for post in posts.items %}
-                        <tr>
-                            <td class="clickable-cell">{{ post.title }}</td>
-                            <td class="clickable-cell">{{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                            <td class="clickable-cell">{{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                            <td>
-                                {% if post.is_visible %}
-                                <span class="badge bg-success">可见</span>
-                                {% else %}
-                                <span class="badge bg-secondary">隐藏</span>
-                                {% endif %}
-                                {% if post.is_pinned %}
-                                <span class="badge bg-info">置顶</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group">
-                                    <button type="button" 
-                                            class="btn btn-sm {% if post.is_pinned %}btn-info{% else %}btn-outline-info{% endif %}"
-                                            data-post-id="{{ post.id }}"
-                                            data-is-pinned="{{ post.is_pinned|tojson }}"
-                                            onclick="togglePin(this)">
-                                        <i class="bi bi-pin-angle{% if post.is_pinned %}-fill{% endif %}"></i>
-                                    </button>
-                                    <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePost('{{ post.id }}')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            {% if posts.pages > 1 %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if posts.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.prev_num) }}">上一页</a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for page in posts.iter_pages() %}
-                        {% if page %}
-                            {% if page != posts.page %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin.dashboard', page=page) }}">{{ page }}</a>
-                            </li>
-                            {% else %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ page }}</span>
-                            </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if posts.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.next_num) }}">下一页</a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
-        </div>
+<div class="container mt-4">
+    <h2>文章管理</h2>
+    <div class="mb-3">
+        <a href="{{ url_for('admin.new_post') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 新建文章
+        </a>
     </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>标题</th>
+                    <th>分类</th>
+                    <th>创建时间</th>
+                    <th>更新时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for post in posts.items %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('admin.edit_post', post_id=post.id) }}">{{ post.title }}</a>
+                    </td>
+                    <td>{{ post.category or '无分类' }}</td>
+                    <td data-created-at="{{ post.created_at.isoformat() }}">{{ post.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td data-updated-at="{{ post.updated_at.isoformat() }}">{{ post.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <!-- 置顶按钮 -->
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm" 
+                                    data-action="toggle-pin"
+                                    data-post-id="{{ post.id }}"
+                                    data-is-pinned="{{ post.is_pinned|tojson }}">
+                                {% if post.is_pinned %}
+                                <i class="bi bi-pin-angle-fill text-danger"></i>
+                                {% else %}
+                                <i class="bi bi-pin-angle"></i>
+                                {% endif %}
+                            </button>
+                            
+                            <!-- 可见性按钮 -->
+                            <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm" 
+                                    data-action="toggle-visibility"
+                                    data-post-id="{{ post.id }}"
+                                    data-is-visible="{{ post.is_visible|tojson }}">
+                                {% if post.is_visible %}
+                                <i class="bi bi-eye-fill text-success"></i>
+                                {% else %}
+                                <i class="bi bi-eye-slash text-secondary"></i>
+                                {% endif %}
+                            </button>
+                            
+                            <!-- 编辑按钮 -->
+                            <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            
+                            <!-- 删除按钮 -->
+                            <button type="button" 
+                                    class="btn btn-outline-danger btn-sm"
+                                    data-action="delete"
+                                    data-post-id="{{ post.id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- 分页 -->
+    {% if posts.pages > 1 %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if posts.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.prev_num) }}">上一页</a>
+            </li>
+            {% endif %}
+            
+            {% for page in posts.iter_pages() %}
+                {% if page %}
+                    <li class="page-item {% if page == posts.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin.dashboard', page=page) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.next_num) }}">下一页</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 </div>
 
 <script>
-function deletePost(postId) {
-    if (confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
-        fetch(`/admin/post/${postId}/delete`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
+    // 初始化所有按钮的事件处理
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始化置顶按钮
+        const pinButtons = document.querySelectorAll('[data-action="toggle-pin"]');
+        pinButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const isPinned = this.dataset.isPinned === 'true';
+                togglePin(postId, !isPinned, this);
+            });
+        });
+
+        // 初始化可见性按钮
+        const visibilityButtons = document.querySelectorAll('[data-action="toggle-visibility"]');
+        visibilityButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.dataset.postId;
+                const isVisible = this.dataset.isVisible === 'true';
+                toggleVisibility(postId, !isVisible, this);
+            });
+        });
+
+        // 初始化删除按钮
+        const deleteButtons = document.querySelectorAll('[data-action="delete"]');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                if (confirm('确定要删除这篇文章吗？')) {
+                    const postId = this.dataset.postId;
+                    deletePost(postId, this);
+                }
+            });
+        });
+    });
+
+    // 切换文章置顶状态
+    async function togglePin(postId, isPinned, button) {
+        try {
+            const response = await fetch(`/admin/post/${postId}/pin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_pinned: isPinned })
+            });
+
+            if (response.ok) {
+                // 更新按钮状态
+                button.dataset.isPinned = isPinned;
+                button.innerHTML = isPinned ? 
+                    '<i class="bi bi-pin-angle-fill text-danger"></i>' : 
+                    '<i class="bi bi-pin-angle"></i>';
+                // 刷新页面以更新文章顺序
                 location.reload();
             } else {
-                alert('删除失败：' + data.message);
+                alert('操作失败，请重试');
             }
-        })
-        .catch(error => {
+        } catch (error) {
+            console.error('Error:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    // 切换文章可见性
+    async function toggleVisibility(postId, isVisible, button) {
+        try {
+            const response = await fetch(`/admin/post/${postId}/visibility`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_visible: isVisible })
+            });
+
+            if (response.ok) {
+                // 更新按钮状态
+                button.dataset.isVisible = isVisible;
+                button.innerHTML = isVisible ? 
+                    '<i class="bi bi-eye-fill text-success"></i>' : 
+                    '<i class="bi bi-eye-slash text-secondary"></i>';
+            } else {
+                alert('操作失败，请重试');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    // 删除文章
+    async function deletePost(postId, button) {
+        try {
+            const response = await fetch(`/admin/post/${postId}/delete`, {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                // 移除整行
+                button.closest('tr').remove();
+            } else {
+                alert('删除失败，请重试');
+            }
+        } catch (error) {
             console.error('Error:', error);
             alert('删除失败，请重试');
-        });
-    }
-}
-
-function togglePin(button) {
-    const postId = button.dataset.postId;
-    const currentPinned = button.dataset.isPinned === 'true';
-    
-    fetch(`/admin/post/${postId}/pin`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            is_pinned: !currentPinned
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            location.reload();
-        } else {
-            throw new Error('操作失败');
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('操作失败，请重试');
-    });
-}
+    }
 </script>
 {% endblock %} 

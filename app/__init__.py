@@ -111,7 +111,10 @@ def create_app(config_name='development'):
     
     config[config_name].init_app(app)
 
+    # 初始化 Flask-Moment 并设置默认时区
     moment.init_app(app)
+    app.jinja_env.globals.update(moment_timezone=app.config['TIMEZONE'])
+    
     db.init_app(app)
     login_manager.init_app(app)
 

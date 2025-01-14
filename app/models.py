@@ -15,18 +15,41 @@ from mongoengine.errors import ValidationError
 db = MongoEngine()
 
 def get_utc_time():
-    """获取UTC时间"""
+    """
+    获取当前的UTC时间
+    
+    Returns:
+        datetime: 当前的UTC时间对象
+    """
     current_app.logger.debug("获取UTC时间")
-    return datetime.utcnow()
+    # 获取当前时间并设置为UTC时区
+    now = datetime.now(pytz.UTC)
+    current_app.logger.debug(f"当前UTC时间: {now}")
+    return now
 
 def convert_to_local_time(utc_dt):
-    """将UTC时间转换为本地时间"""
+    """
+    将UTC时间转换为本地时间（中国时区）
+    
+    Args:
+        utc_dt (datetime): UTC时间对象
+        
+    Returns:
+        datetime: 本地时间对象
+    """
     if utc_dt is None:
         return None
+        
+    # 如果输入时间没有时区信息，假定为UTC时间
     if utc_dt.tzinfo is None:
-        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+        utc_dt = pytz.UTC.localize(utc_dt)
+        # current_app.logger.debug(f"添加UTC时区信息: {utc_dt}")
+    
+    # 转换为本地时间
     local_tz = pytz.timezone(current_app.config['TIMEZONE'])
-    return utc_dt.astimezone(local_tz)
+    local_dt = utc_dt.astimezone(local_tz)
+    # current_app.logger.debug(f"转换时间: UTC {utc_dt} -> 本地 {local_dt}")
+    return local_dt
 
 class Admin(db.Document, UserMixin):
     """管理员模型"""

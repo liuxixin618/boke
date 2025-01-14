@@ -4,9 +4,9 @@ dnspython==2.7.0
 email_validator==2.2.0
 Flask==2.0.3
 Flask-Login==0.6.3
+Flask-Moment==1.0.5
 flask-mongoengine==1.0.0
 Flask-WTF==1.2.2
-flask-moment==1.0.5
 gunicorn==21.2.0
 idna==3.10
 itsdangerous==2.2.0
@@ -16,6 +16,7 @@ mongoengine==0.24.2
 packaging==24.2
 pymongo==4.1.1
 python-dotenv==1.0.0
+pytz==2024.2
 Werkzeug==2.0.3
 WTForms==3.2.1
 

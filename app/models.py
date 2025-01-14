@@ -1,25 +1,25 @@
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mongoengine import MongoEngine
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
+import pytz
+from flask import current_app
 from mongoengine.errors import ValidationError
 
 db = MongoEngine()
 
-def get_beijing_time():
-    """获取北京时间"""
-    utc_now = datetime.utcnow().replace(tzinfo=timezone.utc)
-    beijing_tz = timezone(timedelta(hours=8))
-    return utc_now.astimezone(beijing_tz)
+def get_utc_time():
+    """获取UTC时间"""
+    return datetime.utcnow()
 
-def convert_to_beijing(dt):
-    """将时间转换为北京时间"""
-    if dt is None:
+def convert_to_local_time(utc_dt):
+    """将UTC时间转换为本地时间"""
+    if utc_dt is None:
         return None
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    beijing_tz = timezone(timedelta(hours=8))
-    return dt.astimezone(beijing_tz)
+    if utc_dt.tzinfo is None:
+        utc_dt = utc_dt.replace(tzinfo=pytz.UTC)
+    local_tz = pytz.timezone(current_app.config['TIMEZONE'])
+    return utc_dt.astimezone(local_tz)
 
 class Admin(db.Document, UserMixin):
     """管理员模型"""
@@ -42,8 +42,8 @@ class Post(db.Document):
     title = db.StringField(required=True)
     content = db.StringField(required=True)
     category = db.StringField()
-    created_at = db.DateTimeField(default=get_beijing_time)
-    updated_at = db.DateTimeField(default=get_beijing_time)
+    created_at = db.DateTimeField(default=get_utc_time)
+    updated_at = db.DateTimeField(default=get_utc_time)
     is_visible = db.BooleanField(default=True)
     is_pinned = db.BooleanField(default=False)
     attachments = db.ListField(db.DictField())
@@ -61,13 +61,42 @@ class Post(db.Document):
         ]
     }
 
-    @property
-    def created_at_beijing(self):
-        return convert_to_beijing(self.created_at)
+    def save(self, *args, **kwargs):
+        if not self.created_at:
+            self.created_at = get_utc_time()
+        self.updated_at = get_utc_time()
+        return super(Post, self).save(*args, **kwargs)
 
     @property
-    def updated_at_beijing(self):
-        return convert_to_beijing(self.updated_at)
+    def local_created_at(self):
+        return convert_to_local_time(self.created_at)
+
+    @property
+    def local_updated_at(self):
+        return convert_to_local_time(self.updated_at)
+
+class Attachment(db.Document):
+    """附件模型"""
+    filename = db.StringField(required=True)
+    original_filename = db.StringField(required=True)
+    file_path = db.StringField(required=True)
+    file_type = db.StringField()
+    file_size = db.IntField()
+    upload_time = db.DateTimeField(default=get_utc_time)
+    post = db.ReferenceField('Post')
+
+    meta = {
+        'collection': 'attachment',
+        'indexes': [
+            'filename',
+            'post',
+            'upload_time'
+        ]
+    }
+
+    @property
+    def local_upload_time(self):
+        return convert_to_local_time(self.upload_time)
 
 class SiteConfig(db.Document):
     """网站配置模型"""

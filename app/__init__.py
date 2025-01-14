@@ -92,10 +92,16 @@ def load_user(user_id):
 
 def create_app(config_name='development'):
     app = Flask(__name__)
+    
+    # 加载基础配置
     app.config.from_object(config[config_name])
     
     # 设置最大上传文件大小为 64MB
     app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024
+    
+    # 确保设置了时区
+    if 'TIMEZONE' not in app.config:
+        app.config['TIMEZONE'] = 'Asia/Shanghai'
     
     config[config_name].init_app(app)
 

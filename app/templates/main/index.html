@@ -166,9 +166,9 @@ button.download-all-btn {
                     
                     <div class="text-muted mt-3">
                         <small>
-                            发布于: {{ post.created_at_beijing.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% if post.updated_at_beijing and post.updated_at_beijing != post.created_at_beijing %}
-                            | 更新于: {{ post.updated_at_beijing.strftime('%Y-%m-%d %H:%M:%S') }}
+                            发布于: {{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                            {% if post.local_updated_at and post.local_updated_at != post.local_created_at %}
+                            | 更新于: {{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
                             {% endif %}
                         </small>
                     </div>
@@ -203,9 +203,9 @@ button.download-all-btn {
                             </div>
                             <div class="modal-footer-wrapper">
                                 <div class="modal-time-info">
-                                    <small>发布于: {{ post.created_at_beijing.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-                                    {% if post.updated_at_beijing and post.updated_at_beijing != post.created_at_beijing %}
-                                    <small>更新于: {{ post.updated_at_beijing.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                    <small>发布于: {{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+                                    {% if post.local_updated_at and post.local_updated_at != post.local_created_at %}
+                                    <small>更新于: {{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
                                     {% endif %}
                                 </div>
                                 {% if post.attachments %}

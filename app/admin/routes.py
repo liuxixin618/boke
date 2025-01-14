@@ -3,62 +3,102 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
-from ..models import Admin, Post, SiteConfig, get_beijing_time
+from ..models import Admin, Post, SiteConfig, get_utc_time
+from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id
 from datetime import datetime, timezone, timedelta
 import uuid
 from pathlib import Path
 
 def ensure_upload_folder():
     """确保上传文件夹存在，并返回正确的路径"""
-    # 使用项目根目录下的 uploads 文件夹
-    base_dir = Path(current_app.root_path).parent
-    upload_folder = base_dir / 'uploads'
-    upload_folder.mkdir(parents=True, exist_ok=True)
-    current_app.config['UPLOAD_FOLDER'] = str(upload_folder)
-    return upload_folder
+    try:
+        # 获取项目根目录（app的父目录）
+        base_dir = Path(current_app.root_path).parent
+        # 创建uploads目录
+        upload_folder = base_dir / 'uploads'
+        upload_folder.mkdir(parents=True, exist_ok=True)
+        
+        # 设置上传文件夹路径到应用配置中
+        current_app.config['UPLOAD_FOLDER'] = str(upload_folder)
+        
+        # 确保目录存在且可写
+        if not upload_folder.exists():
+            raise Exception("Upload folder does not exist after creation attempt")
+        if not os.access(str(upload_folder), os.W_OK):
+            raise Exception("Upload folder is not writable")
+            
+        return upload_folder
+    except Exception as e:
+        current_app.logger.error(f"Error ensuring upload folder: {str(e)}")
+        raise
 
-# 允许的文件类型
-ALLOWED_EXTENSIONS = {
-    # 文档类
-    'pdf', 'doc', 'docx', 'txt',
-    # 压缩文件
-    'zip', 'rar', '7z',
-    # 图片文件
-    'jpg', 'jpeg', 'png', 'gif', 'webp',
-    # 应用程序
-    'apk',
-    # Excel文件
-    'xls', 'xlsx'
-}
-
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def sanitize_filename(filename):
+    """自定义文件名清理函数，保留中文字符"""
+    # 替换不安全的字符为下划线
+    unsafe_chars = '<>:"/\\|?*\0'
+    for char in unsafe_chars:
+        filename = filename.replace(char, '_')
+    # 去除首尾空格
+    filename = filename.strip()
+    # 如果文件名为空，返回 unnamed
+    return filename or 'unnamed'
 
 def save_file(file):
     """保存上传的文件并返回存储信息"""
     if not file or not file.filename:
+        current_app.logger.warning("No file or filename provided")
         return None
         
-    if allowed_file(file.filename):
-        try:
-            # 保存原始文件名
-            original_filename = file.filename
-            # 生成安全的存储文件名
-            stored_filename = f"{uuid.uuid4().hex}.{original_filename.rsplit('.', 1)[1].lower()}"
+    try:
+        # 保存原始文件名
+        current_app.logger.info(f"Original filename: {file.filename}")
+        
+        # 分离文件名和扩展名
+        if '.' in file.filename:
+            name_base, ext = file.filename.rsplit('.', 1)
+            ext = '.' + ext.lower()
+        else:
+            name_base = file.filename
+            ext = ''
             
-            # 获取上传目录并保存文件
-            upload_folder = ensure_upload_folder()
-            file_path = upload_folder / stored_filename
-            file.save(str(file_path))
-            
-            return {
-                'filename': original_filename,  # 使用原始文件名
-                'stored_filename': stored_filename
-            }
-        except Exception as e:
-            current_app.logger.error(f"File save error: {str(e)}")
-            return None
-    return None
+        current_app.logger.info(f"Name base: {name_base}, Extension: {ext}")
+        
+        # 使用自定义函数清理文件名，保留中文字符
+        safe_name_base = sanitize_filename(name_base)
+        original_filename = safe_name_base + ext
+        
+        current_app.logger.info(f"Safe original filename: {original_filename}")
+        
+        # 生成唯一的存储文件名
+        stored_filename = f"{uuid.uuid4().hex}{ext}"
+        current_app.logger.info(f"Generated stored filename: {stored_filename}")
+        
+        # 获取上传目录并保存文件
+        upload_folder = ensure_upload_folder()
+        file_path = upload_folder / stored_filename
+        current_app.logger.info(f"Saving file to: {file_path}")
+        file.save(str(file_path))
+        
+        # 确保文件成功保存并获取文件大小
+        if not file_path.exists():
+            current_app.logger.error("File was not saved successfully")
+            raise Exception("File was not saved successfully")
+        
+        file_size = os.path.getsize(str(file_path))
+        current_app.logger.info(f"File size: {file_size} bytes")
+        
+        file_info = {
+            'filename': original_filename,  # 保存清理后的原始文件名
+            'stored_filename': stored_filename,  # 存储的文件名（带扩展名）
+            'file_type': ext[1:] if ext else '',  # 文件类型（不带点）
+            'file_size': file_size  # 文件大小（字节）
+        }
+        current_app.logger.info(f"Returning file info: {file_info}")
+        return file_info
+        
+    except Exception as e:
+        current_app.logger.error(f"File save error: {str(e)}")
+        return None
 
 @admin.route('/')
 @login_required
@@ -68,14 +108,19 @@ def index():
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        username = request.form.get('username')
+        username = sanitize_string(request.form.get('username'))
         password = request.form.get('password')
+        
+        if not username or not password:
+            flash('请输入用户名和密码')
+            return render_template('admin/login.html')
+            
         user = Admin.objects(username=username).first()
         
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('admin.dashboard'))
-        flash('Invalid username or password')
+        flash('用户名或密码错误')
     return render_template('admin/login.html')
 
 @admin.route('/logout')
@@ -89,16 +134,13 @@ def logout():
 @login_required
 def dashboard():
     page = request.args.get('page', 1, type=int)
-    per_page = 10  # 每页显示的文章数量
-    
-    # 计算要跳过的文档数量
-    skip = (page - 1) * per_page
+    per_page = 10
     
     # 获取总文档数
     total = Post.objects.count()
     
-    # 获取当前页的文档，先按置顶状态排序，再按更新时间排序，最后按创建时间排序
-    posts = Post.objects.order_by('-is_pinned', '-updated_at', '-created_at').skip(skip).limit(per_page)
+    # 获取当前页的文档
+    posts = Post.objects.order_by('-is_pinned', '-updated_at', '-created_at').skip((page - 1) * per_page).limit(per_page)
     
     # 创建分页对象
     class Pagination:
@@ -149,15 +191,22 @@ def dashboard():
 @login_required
 def new_post():
     if request.method == 'POST':
-        current_time = get_beijing_time()
+        # 清理并验证输入
+        title = sanitize_string(request.form.get('title'))
+        content = sanitize_string(request.form.get('content'))
+        category = sanitize_string(request.form.get('category'))
         
-        # 处理文章内容
+        if not title or not content:
+            flash('标题和内容不能为空')
+            return render_template('admin/edit_post.html')
+        
+        # 创建文章
         post = Post(
-            title=request.form.get('title'),
-            content=request.form.get('content'),
-            category=request.form.get('category'),
+            title=title,
+            content=content,
+            category=category,
             is_visible=bool(request.form.get('is_visible')),
-            updated_at=current_time
+            updated_at=get_utc_time()
         )
         
         # 处理附件
@@ -180,23 +229,33 @@ def new_post():
 @login_required
 def edit_post(post_id):
     try:
-        post = Post.objects.get_or_404(id=post_id)
+        # 验证并转换 ObjectId
+        post = Post.objects.get_or_404(id=validate_object_id(post_id))
         
         if request.method == 'POST':
             has_changes = False
             
+            # 清理并验证输入
+            title = sanitize_string(request.form.get('title'))
+            content = sanitize_string(request.form.get('content'))
+            category = sanitize_string(request.form.get('category'))
+            
+            if not title or not content:
+                flash('标题和内容不能为空')
+                return render_template('admin/edit_post.html', post=post)
+            
             # 检查基本字段是否有修改
-            if post.title != request.form.get('title'):
+            if post.title != title:
                 has_changes = True
-                post.title = request.form.get('title')
+                post.title = title
                 
-            if post.category != request.form.get('category'):
+            if post.category != category:
                 has_changes = True
-                post.category = request.form.get('category')
+                post.category = category
                 
-            if post.content != request.form.get('content'):
+            if post.content != content:
                 has_changes = True
-                post.content = request.form.get('content')
+                post.content = content
                 
             is_visible = bool(request.form.get('is_visible'))
             if post.is_visible != is_visible:
@@ -205,22 +264,57 @@ def edit_post(post_id):
             
             # 处理新上传的附件
             files = request.files.getlist('attachments')
+            current_app.logger.info(f"Number of files uploaded: {len(files)}")
+            
             for file in files:
                 if file.filename:
+                    current_app.logger.info(f"Processing uploaded file: {file.filename}")
                     file_info = save_file(file)
                     if file_info:
+                        current_app.logger.info(f"File info after save: {file_info}")
                         has_changes = True
                         if not post.attachments:
                             post.attachments = []
                         post.attachments.append(file_info)
+                        current_app.logger.info(f"Current post attachments: {post.attachments}")
+            
+            # 更新现有附件的文件大小（如果缺失）
+            if post.attachments:
+                current_app.logger.info("Checking existing attachments")
+                upload_folder = ensure_upload_folder()
+                for attachment in post.attachments:
+                    current_app.logger.info(f"Checking attachment: {attachment}")
+                    if 'file_size' not in attachment:
+                        file_path = upload_folder / attachment['stored_filename']
+                        if file_path.exists():
+                            attachment['file_size'] = os.path.getsize(str(file_path))
+                            has_changes = True
+                            current_app.logger.info(f"Updated file size for {attachment['filename']}: {attachment['file_size']} bytes")
             
             # 只有在有实际修改时才更新时间戳
             if has_changes:
-                post.updated_at = get_beijing_time()  # 使用北京时间
+                post.updated_at = get_utc_time()
                 
             post.save()
+            current_app.logger.info("Post saved successfully")
             flash('文章已更新')
             return redirect(url_for('admin.dashboard'))
+        
+        # 在显示编辑页面时更新文件大小信息
+        if post.attachments:
+            current_app.logger.info("Updating file sizes for display")
+            upload_folder = ensure_upload_folder()
+            has_changes = False
+            for attachment in post.attachments:
+                current_app.logger.info(f"Checking attachment for display: {attachment}")
+                if 'file_size' not in attachment:
+                    file_path = upload_folder / attachment['stored_filename']
+                    if file_path.exists():
+                        attachment['file_size'] = os.path.getsize(str(file_path))
+                        has_changes = True
+                        current_app.logger.info(f"Updated display file size for {attachment['filename']}: {attachment['file_size']} bytes")
+            if has_changes:
+                post.save()
         
         return render_template('admin/edit_post.html', post=post)
         
@@ -233,7 +327,8 @@ def edit_post(post_id):
 @login_required
 def delete_post(post_id):
     try:
-        post = Post.objects(id=post_id).first_or_404()
+        # 验证并转换 ObjectId
+        post = Post.objects(id=validate_object_id(post_id)).first_or_404()
         
         # 删除所有附件文件
         if post.attachments:
@@ -248,10 +343,10 @@ def delete_post(post_id):
         
         # 删除文章记录
         post.delete()
-        return jsonify({'message': '文章及其附件已删除'})
+        return jsonify({'status': 'success'})
     except Exception as e:
         current_app.logger.error(f"Delete post error: {str(e)}")
-        return jsonify({'error': '删除失败，请重试'}), 500
+        return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @admin.route('/settings', methods=['GET', 'POST'])
 @login_required
@@ -361,7 +456,7 @@ def delete_attachment(post_id, filename):
                 
                 # 从数据库中移除附件记录
                 post.attachments.pop(i)
-                post.updated_at = get_beijing_time()  # 使用北京时间
+                post.updated_at = get_utc_time()  # 使用北京时间
                 post.save()
                 
                 return '', 204
@@ -383,7 +478,7 @@ def toggle_pin(post_id):
     if is_pinned:
         Post.objects(is_pinned=True).update(is_pinned=False)
     
-    post.is_pinned = is_pinned
-    post.save()
+    # 使用 update 方法只更新 is_pinned 字段，不触发 save() 方法
+    Post.objects(id=post_id).update(is_pinned=is_pinned)
     
     return '', 204 

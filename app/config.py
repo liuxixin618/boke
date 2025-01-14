@@ -13,4 +13,5 @@ class Config:
     }
     # 添加编码配置
     JSON_AS_ASCII = False  # 确保 JSON 响应可以包含非 ASCII 字符
-    BABEL_DEFAULT_LOCALE = 'zh_CN'  # 设置默认语言为中文 
+    BABEL_DEFAULT_LOCALE = 'zh_CN'  # 设置默认语言为中文
+    TIMEZONE = 'Asia/Shanghai'  # 设置时区为中国时区 

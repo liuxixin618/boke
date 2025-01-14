@@ -53,10 +53,17 @@
                             <div class="list-group">
                                 {% for attachment in post.attachments %}
                                 <div class="list-group-item d-flex justify-content-between align-items-center">
-                                    <a href="{{ url_for('admin.download_attachment', post_id=post.id, filename=attachment.stored_filename) }}" 
-                                       class="text-decoration-none">
-                                        {{ attachment.filename }}
-                                    </a>
+                                    <div>
+                                        <a href="{{ url_for('admin.download_attachment', post_id=post.id, filename=attachment.stored_filename) }}" 
+                                           class="text-decoration-none">
+                                            {{ attachment.filename }}
+                                        </a>
+                                        {% if attachment.get('file_size') %}
+                                        <small class="text-muted ms-2">
+                                            ({{ (attachment.file_size / 1024)|round(1) }} KB)
+                                        </small>
+                                        {% endif %}
+                                    </div>
                                     <button type="button" 
                                             class="btn btn-outline-danger btn-sm"
                                             onclick="deleteAttachment('{{ post.id }}', '{{ attachment.stored_filename }}')">

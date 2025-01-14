@@ -1,172 +1,125 @@
 {% extends "admin/base.html" %}
 
-{% block title %}后台管理{% endblock %}
+{% block title %}仪表盘{% endblock %}
 
 {% block content %}
-<!-- 添加必要的 Bootstrap CSS 和 JS -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-
 <div class="container">
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h2 class="card-title mb-0">文章管理</h2>
-                        <a href="{{ url_for('admin.new_post') }}" class="btn btn-primary">
-                            <i class="bi bi-plus-lg"></i> 新建文章
-                        </a>
-                    </div>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>标题</th>
-                                    <th>创建时间</th>
-                                    <th>更新时间</th>
-                                    <th>状态</th>
-                                    <th>置顶</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for post in posts.items %}
-                                <tr style="cursor: pointer;" data-post-id="{{ post.id }}" data-post-title="{{ post.title }}" data-post-content="{{ post.content }}">
-                                    <td class="clickable-cell">{{ post.title }}</td>
-                                    <td class="clickable-cell">{{ post.created_at_beijing.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                                    <td class="clickable-cell">{{ post.updated_at_beijing.strftime('%Y-%m-%d %H:%M:%S') if post.updated_at_beijing else '-' }}</td>
-                                    <td class="clickable-cell">
-                                        <span class="badge {% if post.is_visible %}bg-success{% else %}bg-secondary{% endif %}">
-                                            {{ '显示' if post.is_visible else '隐藏' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button type="button" 
-                                                class="btn btn-sm {% if post.is_pinned %}btn-danger{% else %}btn-outline-secondary{% endif %}"
-                                                data-post-id="{{ post.id }}"
-                                                data-is-pinned="{{ post.is_pinned|tojson }}"
-                                                onclick="event.stopPropagation(); togglePin(this)">
-                                            <i class="bi bi-pin-angle{% if post.is_pinned %}-fill{% endif %}"></i>
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" 
-                                               class="btn btn-sm btn-outline-primary"
-                                               onclick="event.stopPropagation();">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <button type="button" 
-                                                    class="btn btn-sm btn-outline-danger"
-                                                    onclick="event.stopPropagation(); deletePost('{{ post.id }}')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    {% if posts.pages > 1 %}
-                    <nav aria-label="Page navigation" class="mt-4">
-                        <ul class="pagination justify-content-center">
-                            {% if posts.has_prev %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.prev_num) }}">
-                                    上一页
-                                </a>
-                            </li>
-                            {% endif %}
-                            
-                            {% for page in posts.iter_pages() %}
-                                {% if page %}
-                                    {% if page != posts.page %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('admin.dashboard', page=page) }}">
-                                            {{ page }}
-                                        </a>
-                                    </li>
-                                    {% else %}
-                                    <li class="page-item active">
-                                        <span class="page-link">{{ page }}</span>
-                                    </li>
-                                    {% endif %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>文章管理</h2>
+                <a href="{{ url_for('admin.new_post') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> 新建文章
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>创建时间</th>
+                            <th>更新时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in posts.items %}
+                        <tr>
+                            <td class="clickable-cell">{{ post.title }}</td>
+                            <td class="clickable-cell">{{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="clickable-cell">{{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td>
+                                {% if post.is_visible %}
+                                <span class="badge bg-success">可见</span>
                                 {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
+                                <span class="badge bg-secondary">隐藏</span>
                                 {% endif %}
-                            {% endfor %}
-                            
-                            {% if posts.has_next %}
+                                {% if post.is_pinned %}
+                                <span class="badge bg-info">置顶</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <button type="button" 
+                                            class="btn btn-sm {% if post.is_pinned %}btn-info{% else %}btn-outline-info{% endif %}"
+                                            data-post-id="{{ post.id }}"
+                                            data-is-pinned="{{ post.is_pinned|tojson }}"
+                                            onclick="togglePin(this)">
+                                        <i class="bi bi-pin-angle{% if post.is_pinned %}-fill{% endif %}"></i>
+                                    </button>
+                                    <a href="{{ url_for('admin.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="deletePost('{{ post.id }}')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if posts.pages > 1 %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if posts.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.prev_num) }}">上一页</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page in posts.iter_pages() %}
+                        {% if page %}
+                            {% if page != posts.page %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.next_num) }}">
-                                    下一页
-                                </a>
+                                <a class="page-link" href="{{ url_for('admin.dashboard', page=page) }}">{{ page }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item active">
+                                <span class="page-link">{{ page }}</span>
                             </li>
                             {% endif %}
-                        </ul>
-                    </nav>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if posts.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin.dashboard', page=posts.next_num) }}">下一页</a>
+                    </li>
                     {% endif %}
-                </div>
-            </div>
+                </ul>
+            </nav>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- 文章详情弹窗 -->
-<div class="modal fade" id="postDetailModal" tabindex="-1" aria-labelledby="postDetailModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="postDetailModalLabel"></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <pre id="postContent" style="white-space: pre-wrap; font-family: inherit; margin: 0;"></pre>
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.clickable-cell {
-    cursor: pointer;
-}
-.modal-dialog {
-    max-width: 80%;
-    margin: 1.75rem auto;
-}
-</style>
 
 <script>
-// 初始化所有弹窗
-document.addEventListener('DOMContentLoaded', function() {
-    // 为所有可点击的单元格添加点击事件
-    document.querySelectorAll('tr[data-post-id]').forEach(row => {
-        row.querySelectorAll('.clickable-cell').forEach(cell => {
-            cell.addEventListener('click', function() {
-                showPostDetail(row);
-            });
-        });
-    });
-});
-
 function deletePost(postId) {
-    if (confirm('确定要删除这篇文章吗？')) {
+    if (confirm('确定要删除这篇文章吗？此操作不可恢复。')) {
         fetch(`/admin/post/${postId}/delete`, {
-            method: 'POST'
-        }).then(response => {
-            if (response.ok) {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
                 location.reload();
             } else {
-                alert('删除失败，请重试');
+                alert('删除失败：' + data.message);
             }
-        }).catch(error => {
+        })
+        .catch(error => {
             console.error('Error:', error);
             alert('删除失败，请重试');
         });
@@ -175,7 +128,7 @@ function deletePost(postId) {
 
 function togglePin(button) {
     const postId = button.dataset.postId;
-    const currentState = button.dataset.isPinned === 'true';
+    const currentPinned = button.dataset.isPinned === 'true';
     
     fetch(`/admin/post/${postId}/pin`, {
         method: 'POST',
@@ -183,29 +136,20 @@ function togglePin(button) {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-            is_pinned: !currentState
+            is_pinned: !currentPinned
         })
-    }).then(response => {
+    })
+    .then(response => {
         if (response.ok) {
             location.reload();
         } else {
-            alert('操作失败，请重试');
+            throw new Error('操作失败');
         }
-    }).catch(error => {
+    })
+    .catch(error => {
         console.error('Error:', error);
         alert('操作失败，请重试');
     });
-}
-
-function showPostDetail(row) {
-    const title = row.dataset.postTitle;
-    const content = row.dataset.postContent;
-    
-    document.getElementById('postDetailModalLabel').textContent = title;
-    document.getElementById('postContent').textContent = content;
-    
-    const modal = new bootstrap.Modal(document.getElementById('postDetailModal'));
-    modal.show();
 }
 </script>
 {% endblock %} 

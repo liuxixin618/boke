@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+数据模型模块
+定义了应用中使用的所有数据模型，包括管理员、文章、网站配置等
+"""
+
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mongoengine import MongoEngine

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+应用工厂模块
+负责创建和配置Flask应用实例，注册扩展和蓝图，初始化网站配置
+"""
+
 from flask import Flask
 from flask_login import LoginManager
 from flask_moment import Moment

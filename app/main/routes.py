@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+主路由模块
+包含所有前台页面的路由处理函数，如首页、文章详情页等
+"""
+
 from flask import render_template, redirect, url_for, flash, request, send_file, current_app
 from . import main
 from ..models import Post, SiteConfig

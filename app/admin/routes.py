@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+后台管理路由模块
+包含所有管理员相关的路由处理函数，如登录、文章管理、网站设置等
+"""
+
 import os
 from flask import render_template, redirect, url_for, request, flash, jsonify, send_from_directory, current_app, send_file
 from flask_login import login_user, logout_user, login_required, current_user
@@ -10,7 +16,15 @@ import uuid
 from pathlib import Path
 
 def ensure_upload_folder():
-    """确保上传文件夹存在，并返回正确的路径"""
+    """
+    确保上传文件夹存在并返回正确的路径
+    
+    Returns:
+        Path: 上传文件夹的路径对象
+        
+    Raises:
+        Exception: 如果创建文件夹失败或文件夹不可写
+    """
     try:
         # 获取项目根目录（app的父目录）
         base_dir = Path(current_app.root_path).parent
@@ -33,7 +47,15 @@ def ensure_upload_folder():
         raise
 
 def sanitize_filename(filename):
-    """自定义文件名清理函数，保留中文字符"""
+    """
+    自定义文件名清理函数，保留中文字符
+    
+    Args:
+        filename (str): 原始文件名
+        
+    Returns:
+        str: 清理后的文件名
+    """
     # 替换不安全的字符为下划线
     unsafe_chars = '<>:"/\\|?*\0'
     for char in unsafe_chars:
@@ -44,7 +66,15 @@ def sanitize_filename(filename):
     return filename or 'unnamed'
 
 def save_file(file):
-    """保存上传的文件并返回存储信息"""
+    """
+    保存上传的文件并返回存储信息
+    
+    Args:
+        file: FileStorage对象，上传的文件
+        
+    Returns:
+        dict: 包含文件信息的字典，如果保存失败返回None
+    """
     if not file or not file.filename:
         current_app.logger.warning("No file or filename provided")
         return None
@@ -87,6 +117,7 @@ def save_file(file):
         file_size = os.path.getsize(str(file_path))
         current_app.logger.info(f"File size: {file_size} bytes")
         
+        # 返回文件信息字典
         file_info = {
             'filename': original_filename,  # 保存清理后的原始文件名
             'stored_filename': stored_filename,  # 存储的文件名（带扩展名）
@@ -103,11 +134,19 @@ def save_file(file):
 @admin.route('/')
 @login_required
 def index():
+    """后台首页路由，重定向到仪表盘"""
     return redirect(url_for('admin.dashboard'))
 
 @admin.route('/login', methods=['GET', 'POST'])
 def login():
+    """
+    管理员登录
+    
+    处理GET请求：显示登录页面
+    处理POST请求：验证用户名密码并登录
+    """
     if request.method == 'POST':
+        # 获取并清理用户输入
         username = sanitize_string(request.form.get('username'))
         password = request.form.get('password')
         
@@ -115,8 +154,8 @@ def login():
             flash('请输入用户名和密码')
             return render_template('admin/login.html')
             
+        # 验证用户名和密码
         user = Admin.objects(username=username).first()
-        
         if user and user.check_password(password):
             login_user(user)
             return redirect(url_for('admin.dashboard'))
@@ -126,6 +165,7 @@ def login():
 @admin.route('/logout')
 @login_required
 def logout():
+    """管理员登出"""
     logout_user()
     flash('您已成功退出登录')
     return redirect(url_for('admin.login'))
@@ -133,13 +173,17 @@ def logout():
 @admin.route('/dashboard')
 @login_required
 def dashboard():
+    """
+    后台仪表盘
+    显示文章列表，支持分页
+    """
     page = request.args.get('page', 1, type=int)
     per_page = 10
     
     # 获取总文档数
     total = Post.objects.count()
     
-    # 获取当前页的文档
+    # 获取当前页的文档，按置顶和更新时间排序
     posts = Post.objects.order_by('-is_pinned', '-updated_at', '-created_at').skip((page - 1) * per_page).limit(per_page)
     
     # 创建分页对象
@@ -153,21 +197,26 @@ def dashboard():
             
         @property
         def has_prev(self):
+            """是否有上一页"""
             return self.page > 1
             
         @property
         def has_next(self):
+            """是否有下一页"""
             return self.page < self.pages
             
         @property
         def prev_num(self):
+            """上一页页码"""
             return self.page - 1
             
         @property
         def next_num(self):
+            """下一页页码"""
             return self.page + 1
             
         def iter_pages(self):
+            """生成分页导航的页码"""
             left_edge = 2
             left_current = 2
             right_current = 3
@@ -190,6 +239,12 @@ def dashboard():
 @admin.route('/post/new', methods=['GET', 'POST'])
 @login_required
 def new_post():
+    """
+    创建新文章
+    
+    GET请求：显示创建文章表单
+    POST请求：处理文章创建
+    """
     if request.method == 'POST':
         # 清理并验证输入
         title = sanitize_string(request.form.get('title'))
@@ -228,6 +283,15 @@ def new_post():
 @admin.route('/post/edit/<post_id>', methods=['GET', 'POST'])
 @login_required
 def edit_post(post_id):
+    """
+    编辑文章
+    
+    Args:
+        post_id: 文章ID
+        
+    GET请求：显示编辑文章表单
+    POST请求：处理文章更新
+    """
     try:
         # 验证并转换 ObjectId
         post = Post.objects.get_or_404(id=validate_object_id(post_id))
@@ -326,6 +390,14 @@ def edit_post(post_id):
 @admin.route('/post/<post_id>/delete', methods=['POST'])
 @login_required
 def delete_post(post_id):
+    """
+    删除文章
+    
+    Args:
+        post_id: 文章ID
+        
+    删除文章及其所有附件文件
+    """
     try:
         # 验证并转换 ObjectId
         post = Post.objects(id=validate_object_id(post_id)).first_or_404()
@@ -351,6 +423,12 @@ def delete_post(post_id):
 @admin.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
+    """
+    网站设置
+    
+    GET请求：显示设置表单
+    POST请求：更新网站配置
+    """
     if request.method == 'POST':
         try:
             # 更新网站配置
@@ -391,6 +469,16 @@ def settings():
 @admin.route('/post/<post_id>/attachment/<filename>')
 @login_required
 def download_attachment(post_id, filename):
+    """
+    下载附件
+    
+    Args:
+        post_id: 文章ID
+        filename: 文件名
+        
+    Returns:
+        文件下载响应
+    """
     try:
         post = Post.objects.get_or_404(id=post_id)
         attachment = next((a for a in post.attachments if a['stored_filename'] == filename), None)
@@ -417,6 +505,13 @@ def download_attachment(post_id, filename):
 @admin.route('/post/<post_id>/attachment/<filename>/delete', methods=['POST'])
 @login_required
 def delete_attachment(post_id, filename):
+    """
+    删除附件
+    
+    Args:
+        post_id: 文章ID
+        filename: 文件名
+    """
     try:
         post = Post.objects.get_or_404(id=post_id)
         
@@ -443,11 +538,17 @@ def delete_attachment(post_id, filename):
         
     except Exception as e:
         current_app.logger.error(f"Delete attachment error: {str(e)}")
-        return 'Internal server error', 500 
+        return 'Internal server error', 500
 
 @admin.route('/post/<post_id>/pin', methods=['POST'])
 @login_required
 def toggle_pin(post_id):
+    """
+    切换文章的置顶状态
+    
+    Args:
+        post_id: 文章ID
+    """
     post = Post.objects(id=post_id).first_or_404()
     data = request.get_json()
     is_pinned = data.get('is_pinned', False)
@@ -459,7 +560,7 @@ def toggle_pin(post_id):
     # 使用 update 方法只更新 is_pinned 字段，不触发 save() 方法
     Post.objects(id=post_id).update(is_pinned=is_pinned)
     
-    return '', 204 
+    return '', 204
 
 @admin.route('/admins')
 @login_required
@@ -471,7 +572,12 @@ def admins():
 @admin.route('/admins/<admin_id>/username', methods=['POST'])
 @login_required
 def update_username(admin_id):
-    """更新管理员用户名"""
+    """
+    更新管理员用户名
+    
+    Args:
+        admin_id: 管理员ID
+    """
     try:
         # 验证并获取管理员
         admin = Admin.objects.get_or_404(id=validate_object_id(admin_id))
@@ -493,7 +599,7 @@ def update_username(admin_id):
         
     except Exception as e:
         current_app.logger.error(f"Update username error: {str(e)}")
-        return '操作失败，请重试', 500 
+        return '操作失败，请重试', 500
 
 @admin.route('/admins/change_password', methods=['POST'])
 @login_required
@@ -504,6 +610,7 @@ def admin_change_password():
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
         
+        # 验证密码
         if not current_user.check_password(old_password):
             return '当前密码错误', 400
         elif new_password != confirm_password:
@@ -511,6 +618,7 @@ def admin_change_password():
         elif len(new_password) < 1:
             return '新密码不能为空', 400
             
+        # 更新密码
         current_user.set_password(new_password)
         current_user.save()
         

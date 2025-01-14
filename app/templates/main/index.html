@@ -4,6 +4,18 @@
 
 {% block content %}
 <style>
+.search-form {
+    margin-bottom: 2rem;
+}
+.search-input {
+    border-radius: 20px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+.search-btn {
+    border-radius: 20px;
+    margin-left: 0.5rem;
+}
 .card-body {
     cursor: pointer;
 }
@@ -113,6 +125,33 @@ button.download-all-btn {
 <div class="container">
     <div class="row">
         <div class="col-12">
+            <!-- 搜索表单 -->
+            <form class="search-form" method="GET" action="{{ url_for('main.index') }}">
+                <div class="input-group">
+                    <input type="text" 
+                           class="form-control search-input" 
+                           name="search" 
+                           placeholder="搜索文章..."
+                           value="{{ request.args.get('search', '') }}"
+                           aria-label="搜索文章">
+                    <button class="btn btn-primary search-btn" type="submit">
+                        <i class="bi bi-search"></i> 搜索
+                    </button>
+                    {% if request.args.get('search') %}
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary search-btn">
+                        <i class="bi bi-x"></i> 清除
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+
+            {% if request.args.get('search') %}
+            <div class="alert alert-info mb-4">
+                搜索结果: "{{ request.args.get('search') }}" 
+                <small>(共找到 {{ posts.total }} 篇文章)</small>
+            </div>
+            {% endif %}
+
             {% for post in posts.items %}
             <div class="card mb-4">
                 <div class="card-body" onclick="openPostModal('{{ post.id }}')">
@@ -196,7 +235,7 @@ button.download-all-btn {
                 <ul class="pagination justify-content-center">
                     {% if posts.has_prev %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.index', page=posts.prev_num) }}">
+                        <a class="page-link" href="{{ url_for('main.index', page=posts.prev_num, search=request.args.get('search', '')) }}">
                             上一页
                         </a>
                     </li>
@@ -206,7 +245,7 @@ button.download-all-btn {
                         {% if page %}
                             {% if page != posts.page %}
                             <li class="page-item">
-                                <a class="page-link" href="{{ url_for('main.index', page=page) }}">
+                                <a class="page-link" href="{{ url_for('main.index', page=page, search=request.args.get('search', '')) }}">
                                     {{ page }}
                                 </a>
                             </li>
@@ -224,7 +263,7 @@ button.download-all-btn {
                     
                     {% if posts.has_next %}
                     <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.index', page=posts.next_num) }}">
+                        <a class="page-link" href="{{ url_for('main.index', page=posts.next_num, search=request.args.get('search', '')) }}">
                             下一页
                         </a>
                     </li>

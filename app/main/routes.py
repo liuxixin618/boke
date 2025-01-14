@@ -8,9 +8,15 @@ from pathlib import Path
 def index():
     page = request.args.get('page', 1, type=int)
     per_page = int(SiteConfig.get_config('posts_per_page', 10))
+    search_query = request.args.get('search', '').strip()
+    
+    # 构建查询条件
+    query = {'is_visible': True}
+    if search_query:
+        query['title__icontains'] = search_query
     
     # 获取可见的文章，按置顶、更新时间和创建时间排序
-    posts = Post.objects(is_visible=True).order_by('-is_pinned', '-updated_at', '-created_at').paginate(page=page, per_page=per_page)
+    posts = Post.objects(**query).order_by('-is_pinned', '-updated_at', '-created_at').paginate(page=page, per_page=per_page)
     
     # 获取所有网站配置
     site_configs = {}

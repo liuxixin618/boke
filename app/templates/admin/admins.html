@@ -1,0 +1,171 @@
+{% extends "admin/base.html" %}
+
+{% block title %}管理员管理{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">管理员列表</h2>
+                    
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>用户名</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for admin in admins %}
+                                <tr>
+                                    <td>{{ admin.username }}</td>
+                                    <td>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-primary me-2"
+                                                onclick="showEditUsernameModal('{{ admin.id }}', '{{ admin.username }}')">
+                                            修改用户名
+                                        </button>
+                                        {% if admin.id == current_user.id %}
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-warning"
+                                                onclick="showChangePasswordModal()">
+                                            修改密码
+                                        </button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改用户名模态框 -->
+<div class="modal fade" id="editUsernameModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">修改用户名</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUsernameForm" method="post">
+                    <input type="hidden" id="editAdminId" name="admin_id">
+                    <div class="mb-3">
+                        <label for="newUsername" class="form-label">新用户名</label>
+                        <input type="text" class="form-control" id="newUsername" name="new_username" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="submitEditUsername()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 修改密码模态框 -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">修改密码</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm" method="post">
+                    <div class="mb-3">
+                        <label for="oldPassword" class="form-label">当前密码</label>
+                        <input type="password" class="form-control" id="oldPassword" name="old_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label">新密码</label>
+                        <input type="password" class="form-control" id="newPassword" name="new_password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">确认新密码</label>
+                        <input type="password" class="form-control" id="confirmPassword" name="confirm_password" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="submitChangePassword()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化模态框
+    window.editUsernameModal = new bootstrap.Modal(document.getElementById('editUsernameModal'));
+    window.changePasswordModal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+});
+
+function showEditUsernameModal(adminId, currentUsername) {
+    document.getElementById('editAdminId').value = adminId;
+    document.getElementById('newUsername').value = currentUsername;
+    window.editUsernameModal.show();
+}
+
+function showChangePasswordModal() {
+    document.getElementById('changePasswordForm').reset();
+    window.changePasswordModal.show();
+}
+
+function submitEditUsername() {
+    const form = document.getElementById('editUsernameForm');
+    const adminId = document.getElementById('editAdminId').value;
+    const formData = new FormData(form);
+    
+    fetch(`/admin/admins/${adminId}/username`, {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            window.editUsernameModal.hide();
+            location.reload();
+        } else {
+            response.text().then(text => alert(text || '操作失败，请重试'));
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('操作失败，请重试');
+    });
+}
+
+function submitChangePassword() {
+    const form = document.getElementById('changePasswordForm');
+    const formData = new FormData(form);
+    
+    if (formData.get('new_password') !== formData.get('confirm_password')) {
+        alert('两次输入的新密码不一致');
+        return;
+    }
+    
+    fetch('/admin/admins/change_password', {
+        method: 'POST',
+        body: formData
+    }).then(response => {
+        if (response.ok) {
+            window.changePasswordModal.hide();
+            location.reload();
+        } else {
+            response.text().then(text => alert(text || '操作失败，请重试'));
+        }
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('操作失败，请重试');
+    });
+}
+</script>
+{% endblock %} 

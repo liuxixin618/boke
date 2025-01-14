@@ -388,28 +388,6 @@ def settings():
     
     return render_template('admin/settings.html', site_config=configs)
 
-@admin.route('/change_password', methods=['GET', 'POST'])
-@login_required
-def change_password():
-    if request.method == 'POST':
-        old_password = request.form.get('old_password')
-        new_password = request.form.get('new_password')
-        confirm_password = request.form.get('confirm_password')
-        
-        if not current_user.check_password(old_password):
-            flash('当前密码错误')
-        elif new_password != confirm_password:
-            flash('两次输入的新密码不一致')
-        elif len(new_password) < 1:
-            flash('新密码不能为空')
-        else:
-            current_user.set_password(new_password)
-            current_user.save()
-            flash('密码已更新')
-            return redirect(url_for('admin.dashboard'))
-    
-    return render_template('admin/change_password.html')
-
 @admin.route('/post/<post_id>/attachment/<filename>')
 @login_required
 def download_attachment(post_id, filename):
@@ -482,3 +460,62 @@ def toggle_pin(post_id):
     Post.objects(id=post_id).update(is_pinned=is_pinned)
     
     return '', 204 
+
+@admin.route('/admins')
+@login_required
+def admins():
+    """管理员列表页面"""
+    admins = Admin.objects.all()
+    return render_template('admin/admins.html', admins=admins)
+
+@admin.route('/admins/<admin_id>/username', methods=['POST'])
+@login_required
+def update_username(admin_id):
+    """更新管理员用户名"""
+    try:
+        # 验证并获取管理员
+        admin = Admin.objects.get_or_404(id=validate_object_id(admin_id))
+        
+        # 获取并验证新用户名
+        new_username = sanitize_string(request.form.get('new_username', '').strip())
+        if not new_username:
+            return '用户名不能为空', 400
+            
+        # 检查用户名是否已存在
+        if Admin.objects(username=new_username, id__ne=admin.id).first():
+            return '用户名已存在', 400
+            
+        # 更新用户名
+        admin.username = new_username
+        admin.save()
+        
+        return '', 204
+        
+    except Exception as e:
+        current_app.logger.error(f"Update username error: {str(e)}")
+        return '操作失败，请重试', 500 
+
+@admin.route('/admins/change_password', methods=['POST'])
+@login_required
+def admin_change_password():
+    """修改管理员密码"""
+    try:
+        old_password = request.form.get('old_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not current_user.check_password(old_password):
+            return '当前密码错误', 400
+        elif new_password != confirm_password:
+            return '两次输入的新密码不一致', 400
+        elif len(new_password) < 1:
+            return '新密码不能为空', 400
+            
+        current_user.set_password(new_password)
+        current_user.save()
+        
+        return '', 204
+        
+    except Exception as e:
+        current_app.logger.error(f"Change password error: {str(e)}")
+        return '操作失败，请重试', 500 

@@ -81,7 +81,7 @@ def create_app(config_name='development'):
                     'type': 'str'
                 },
                 {
-                    'key': 'preview_length',
+                    'key': 'content_preview_length',
                     'value': '200',
                     'description': '博客内容预览长度',
                     'type': 'int'
@@ -147,13 +147,13 @@ def create_app(config_name='development'):
                     'type': 'int'
                 },
                 {
-                    'key': 'beian_text',
+                    'key': 'icp_text',
                     'value': '',
                     'description': '备案信息文本',
                     'type': 'str'
                 },
                 {
-                    'key': 'beian_link',
+                    'key': 'icp_link',
                     'value': '',
                     'description': '备案信息链接地址',
                     'type': 'str'

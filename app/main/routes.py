@@ -246,7 +246,52 @@ def submit_message():
         return redirect(url_for('main.message'))
     
     # 获取IP地址
-    ip_address = request.remote_addr
+    def get_real_ip():
+        """获取真实IP地址，优先返回IPv4地址"""
+        def is_valid_ipv4(ip):
+            """检查是否为有效的IPv4地址"""
+            if not ip:
+                return False
+            parts = ip.split('.')
+            if len(parts) != 4:
+                return False
+            try:
+                return all(0 <= int(part) <= 255 for part in parts)
+            except (ValueError, TypeError):
+                return False
+
+        def get_first_ipv4(ips):
+            """从IP地址列表中获取第一个IPv4地址"""
+            if not ips:
+                return None
+            ips = [ip.strip() for ip in ips.split(',')]
+            for ip in ips:
+                if is_valid_ipv4(ip):
+                    return ip
+            return ips[0]  # 如果没有IPv4地址，返回第一个地址
+
+        # 优先从 X-Forwarded-For 获取
+        if 'X-Forwarded-For' in request.headers:
+            ip = get_first_ipv4(request.headers['X-Forwarded-For'])
+            if ip:
+                return ip
+
+        # 其次从 X-Real-IP 获取
+        if 'X-Real-IP' in request.headers:
+            ip = request.headers['X-Real-IP'].strip()
+            if is_valid_ipv4(ip):
+                return ip
+
+        # 最后使用远程地址
+        remote_addr = request.remote_addr
+        if remote_addr and is_valid_ipv4(remote_addr):
+            return remote_addr
+        
+        # 如果都不是有效的IPv4地址，返回原始remote_addr
+        return request.remote_addr
+
+    # 获取IP地址
+    ip_address = get_real_ip()
     
     # 检查IP是否被限制
     ip_record = IPRecord.objects(ip_address=ip_address).first()

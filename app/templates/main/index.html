@@ -1,6 +1,8 @@
 {% extends "main/base.html" %}
 {% from "macros.html" import render_pagination %}
 
+{% block title %}{{ site_config.nav_home_text }}{% endblock %}
+
 {% block content %}
 <div class="container">
     <!-- 搜索框部分 -->

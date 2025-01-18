@@ -3,8 +3,26 @@
 
 {% block content %}
 <div class="container">
+    <!-- 搜索框部分 -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">搜索</h5>
+                    <form action="{{ url_for('main.index') }}" method="get">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" value="{{ request.args.get('search', '') }}" placeholder="搜索文章...">
+                            <button class="btn btn-outline-primary" type="submit">搜索</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文章列表部分 -->
     <div class="row">
-        <div class="col-md-8">
+        <div class="col-12">
             {% if request.args.get('search') %}
             <div class="alert alert-info">
                 搜索结果：{{ posts.total }} 篇文章
@@ -38,20 +56,6 @@
             {% endfor %}
 
             {{ render_pagination(posts, 'main.index') }}
-        </div>
-
-        <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title">搜索</h5>
-                    <form action="{{ url_for('main.index') }}" method="get">
-                        <div class="input-group">
-                            <input type="text" class="form-control" name="search" value="{{ request.args.get('search', '') }}" placeholder="搜索文章...">
-                            <button class="btn btn-outline-primary" type="submit">搜索</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
         </div>
     </div>
 </div>

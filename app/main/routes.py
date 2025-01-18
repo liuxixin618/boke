@@ -8,6 +8,7 @@ from flask import render_template, redirect, url_for, flash, request, send_file,
 from . import main
 from ..models import Post, SiteConfig, Message, IPRecord
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id, escape_regex_pattern
+from ..utils.cache import cache_for
 import os
 from pathlib import Path
 import json
@@ -86,6 +87,7 @@ def save_file(file):
         return {'success': False, 'message': str(e)}
 
 @main.route('/')
+@cache_for(duration=300)  # 5分钟缓存
 def index():
     """首页路由"""
     current_app.logger.info("访问首页")
@@ -116,12 +118,14 @@ def index():
                          site_config=site_configs)
 
 @main.route('/goods')
+@cache_for(duration=600)  # 10分钟缓存
 def goods():
     """好物分享页面"""
     current_app.logger.info("访问好物分享页面")
     return render_template('main/goods.html')
 
 @main.route('/about')
+@cache_for(duration=600)  # 10分钟缓存
 def about():
     """关于作者页面"""
     current_app.logger.info("访问关于作者页面")
@@ -322,6 +326,7 @@ def download_message_attachment(message_id):
     ) 
 
 @main.route('/post/<post_id>')
+@cache_for(duration=300)  # 5分钟缓存
 def post(post_id):
     """文章详情页"""
     # 验证并清理 post_id

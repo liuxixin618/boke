@@ -279,3 +279,17 @@ class IPRecord(db.Document):
         'collection': 'ip_record',
         'indexes': ['ip_address', 'is_blocked']
     } 
+
+class Cache(db.Document):
+    """缓存集合"""
+    key = db.StringField(required=True, unique=True)  # 缓存键
+    value = db.StringField(required=True)  # 缓存值（JSON字符串）
+    created_at = db.DateTimeField(default=datetime.utcnow)  # 创建时间
+
+    meta = {
+        'collection': 'caches',
+        'indexes': [
+            'key',
+            {'fields': ['created_at'], 'expireAfterSeconds': 3600}  # 1小时后自动过期
+        ]
+    } 

@@ -7,6 +7,12 @@
     <!-- 弹幕区域 -->
     <div class="card mb-4">
         <div class="card-body">
+            <!-- 添加提示文本 -->
+            <div id="danmaku-tip" class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                <i class="bi bi-info-circle"></i>留言加载需要3秒的时间，感谢您的耐心等待(๑•̀ㅂ•́)و✧
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <div id="danmaku-container" 
                  style="height: 400px; position: relative; overflow: hidden; background-color: rgba(0, 0, 0, 0.05);"
                  data-messages='{{ messages|tojson|safe }}'>
@@ -90,10 +96,28 @@
                 if (messages.length > 0) {
                     createDanmaku(getRandomMessage());
                 }
-                // 随机 1-3 秒后发送下一条
                 setTimeout(sendNext, Math.random() * 2000 + 1000);
             }
-            sendNext();
+
+            // 先发送固定的欢迎弹幕
+            const welcomeMessages = [
+                { contact: '系统', content: '( ╯▽╰)欢迎来到留言墙！' },
+                { contact: '系统', content: '*★,°*:.☆(￣▽￣)/$:*.°★* 精彩留言即将开始...' },
+                { contact: '系统', content: '(๑•̀ㅂ•́)و✧点击下方按钮，发送你的留言' },
+                { contact: '系统', content: 'ヾ(^▽^*)))你回来啦~~~' },
+                { contact: '系统', content: '(/≧▽≦)/留言弹幕装填完毕马上就来...' }
+            ];
+
+            // 立即发送第一条欢迎弹幕
+            createDanmaku(welcomeMessages[0]);
+
+            // 其余欢迎弹幕每隔300ms发送一条
+            for(let i = 1; i < welcomeMessages.length; i++) {
+                setTimeout(() => createDanmaku(welcomeMessages[i]), i * 300);
+            }
+
+            // 最后一条欢迎弹幕发送完1秒后开始随机弹幕
+            setTimeout(sendNext, welcomeMessages.length * 300 + 1000);
         }
 
         startDanmaku();

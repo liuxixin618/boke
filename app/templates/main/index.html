@@ -8,7 +8,6 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">搜索</h5>
                     <form action="{{ url_for('main.index') }}" method="get">
                         <div class="input-group">
                             <input type="text" class="form-control" name="search" value="{{ request.args.get('search', '') }}" placeholder="搜索文章...">

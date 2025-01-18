@@ -1,0 +1,103 @@
+{% extends "main/base.html" %}
+
+{% block title %}留言墙{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- 弹幕区域 -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div id="danmaku-container" 
+                 style="height: 400px; position: relative; overflow: hidden; background-color: rgba(0, 0, 0, 0.05);"
+                 data-messages='{{ messages|tojson|safe }}'>
+                <!-- 弹幕将在这里显示 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 留言按钮 -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('main.message') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-pencil-square"></i> 我也要留言
+        </a>
+    </div>
+</div>
+
+<style>
+.danmaku {
+    position: absolute;
+    white-space: nowrap;
+    color: var(--text-color);
+    font-size: 16px;
+    transition: transform 15s linear;
+    transform: translateX(100vw);
+}
+
+.danmaku.moving {
+    transform: translateX(-100%);
+}
+</style>
+
+<script>
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const container = document.getElementById('danmaku-container');
+        const messages = JSON.parse(container.dataset.messages);
+        const containerHeight = container.offsetHeight;
+        const lanes = 10; // 弹道数量
+        const laneHeight = containerHeight / lanes;
+        const currentLanes = new Array(lanes).fill(false); // 跟踪每个弹道的使用状态
+
+        function getRandomLane() {
+            const availableLanes = currentLanes.map((used, index) => !used ? index : -1).filter(index => index !== -1);
+            if (availableLanes.length === 0) {
+                currentLanes.fill(false); // 重置所有弹道
+                return Math.floor(Math.random() * lanes);
+            }
+            return availableLanes[Math.floor(Math.random() * availableLanes.length)];
+        }
+
+        function createDanmaku(message) {
+            const lane = getRandomLane();
+            currentLanes[lane] = true;
+
+            const danmaku = document.createElement('div');
+            danmaku.className = 'danmaku';
+            danmaku.textContent = `${message.contact || '匿名'}：${message.content}`;
+            danmaku.style.top = `${lane * laneHeight + 5}px`; // 5px padding
+
+            container.appendChild(danmaku);
+
+            // 强制回流
+            danmaku.offsetHeight;
+
+            // 开始动画
+            danmaku.classList.add('moving');
+
+            // 动画结束后移除元素
+            setTimeout(() => {
+                danmaku.remove();
+                currentLanes[lane] = false;
+            }, 15000); // 与 CSS transition 时间相匹配
+        }
+
+        function startDanmaku() {
+            function getRandomMessage() {
+                return messages[Math.floor(Math.random() * messages.length)];
+            }
+
+            function sendNext() {
+                if (messages.length > 0) {
+                    createDanmaku(getRandomMessage());
+                }
+                // 随机 1-3 秒后发送下一条
+                setTimeout(sendNext, Math.random() * 2000 + 1000);
+            }
+            sendNext();
+        }
+
+        startDanmaku();
+    });
+})();
+</script>
+{% endblock %} 

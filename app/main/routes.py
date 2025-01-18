@@ -339,3 +339,21 @@ def post(post_id):
     post = Post.objects(id=post_id, is_visible=True).first_or_404()
     
     return render_template('main/post.html', post=post) 
+
+@main.route('/messages')
+def messages_show():
+    """留言墙页面"""
+    # 获取最多20条公开的留言，使用 MongoDB 的聚合管理实现随机排序
+    pipeline = [
+        {'$match': {'is_public': True}},  # 筛选公开留言
+        {'$sample': {'size': 20}}  # 随机选择20条
+    ]
+    messages = list(Message.objects.aggregate(pipeline))
+    
+    # 转换为字典列表，以便JSON序列化
+    messages_list = [{
+        'content': msg['content'],
+        'contact': msg.get('contact', '匿名')
+    } for msg in messages]
+    
+    return render_template('main/messages_show.html', messages=messages_list) 

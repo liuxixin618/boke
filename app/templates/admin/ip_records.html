@@ -1,0 +1,77 @@
+{% extends "admin/base.html" %}
+{% from "macros.html" import render_pagination %}
+
+{% block title %}IP管理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>IP管理</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>IP地址</th>
+                    <th>留言数量</th>
+                    <th>最后留言时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in pagination.items %}
+                <tr>
+                    <td>{{ record.ip_address }}</td>
+                    <td>{{ record.message_count }}</td>
+                    <td>{{ moment(record.last_message_at).format('YYYY-MM-DD HH:mm:ss') if record.last_message_at }}</td>
+                    <td>
+                        <span class="badge {% if record.is_blocked %}bg-danger{% else %}bg-success{% endif %}">
+                            {{ '已禁用' if record.is_blocked else '正常' }}
+                        </span>
+                    </td>
+                    <td>
+                        <button type="button" 
+                                class="btn btn-sm {% if record.is_blocked %}btn-success{% else %}btn-danger{% endif %}"
+                                onclick="toggleIPBlock('{{ record.ip_address }}', this)">
+                            {{ '解除禁用' if record.is_blocked else '禁用' }}
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {{ render_pagination(pagination, 'admin.ip_records') }}
+</div>
+
+<script>
+function toggleIPBlock(ipAddress, button) {
+    if (!confirm('确定要' + (button.textContent.trim() === '禁用' ? '禁用' : '解除禁用') + '该IP吗？')) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/ip/${ipAddress}/block`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            throw new Error(data.message || '操作失败');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message || '操作失败，请重试');
+    });
+}
+</script>
+{% endblock %} 

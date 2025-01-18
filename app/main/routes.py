@@ -232,6 +232,7 @@ def submit_message():
     content = request.form.get('content', '').strip()
     contact = request.form.get('contact', '').strip()
     allow_public = request.form.get('allow_public', 'false') == 'true'
+    is_public = False
     attachment_json = request.form.get('attachment')
     
     # 检查内容长度
@@ -263,7 +264,7 @@ def submit_message():
         contact=contact,
         allow_public=allow_public,
         ip_address=ip_address,
-        is_public=allow_public
+        is_public=is_public
     )
     
     # 处理附件

@@ -1,8 +1,0 @@
-Collecting click
-  Using cached click-8.1.8-py3-none-any.whl.metadata (2.3 kB)
-Collecting colorama (from click)
-  Using cached colorama-0.4.6-py2.py3-none-any.whl.metadata (17 kB)
-Using cached click-8.1.8-py3-none-any.whl (98 kB)
-Using cached colorama-0.4.6-py2.py3-none-any.whl (25 kB)
-Installing collected packages: colorama, click
-Successfully installed click-8.1.8 colorama-0.4.6

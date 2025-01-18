@@ -31,6 +31,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.ip_records' %}active{% endif %}" href="{{ url_for('admin.ip_records') }}">
+                            <i class="bi bi-shield"></i> IP管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
                             <i class="bi bi-gear"></i> 网站设置
                         </a>

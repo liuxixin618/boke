@@ -761,4 +761,18 @@ def toggle_ip_block(ip_address):
     ip_record.is_blocked = not ip_record.is_blocked
     ip_record.save()
     
-    return jsonify({'success': True}) 
+    return jsonify({'success': True})
+
+@admin.route('/ip_records')
+@login_required
+def ip_records():
+    """IP管理页面"""
+    page = request.args.get('page', 1, type=int)
+    per_page = int(SiteConfig.get_config('messages_per_page', 20))  # 使用留言管理的每页显示数量
+    
+    # 按最后留言时间倒序排序
+    pagination = IPRecord.objects.order_by('-last_message_at').paginate(
+        page=page, per_page=per_page
+    )
+    
+    return render_template('admin/ip_records.html', pagination=pagination) 

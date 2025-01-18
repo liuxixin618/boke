@@ -25,8 +25,16 @@
                 <tr>
                     <td>{{ message.contact or '匿名' }}</td>
                     <td>{{ moment(message.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}</td>
-                    <td>{{ '是' if message.allow_public else '否' }}</td>
-                    <td>{{ '已公开' if message.is_public else '未公开' }}</td>
+                    <td>
+                        <span class="badge {% if message.allow_public %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ '允许' if message.allow_public else '不允许' }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if message.is_public %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ '已公开' if message.is_public else '未公开' }}
+                        </span>
+                    </td>
                     {% if show_ip %}
                     <td>{{ message.ip_address }}</td>
                     {% endif %}

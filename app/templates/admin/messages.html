@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+{% from "macros.html" import render_pagination %}
+
+{% block title %}留言管理{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>留言管理</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>联系方式</th>
+                    <th>留言时间</th>
+                    <th>允许公开</th>
+                    <th>公开状态</th>
+                    {% if show_ip %}
+                    <th>IP地址</th>
+                    {% endif %}
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for message in pagination.items %}
+                <tr>
+                    <td>{{ message.contact or '匿名' }}</td>
+                    <td>{{ moment(message.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}</td>
+                    <td>{{ '是' if message.allow_public else '否' }}</td>
+                    <td>{{ '已公开' if message.is_public else '未公开' }}</td>
+                    {% if show_ip %}
+                    <td>{{ message.ip_address }}</td>
+                    {% endif %}
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{{ url_for('admin.view_message', message_id=message.id) }}" class="btn btn-sm btn-info">查看</a>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteMessage('{{ message.id }}')">删除</button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {{ render_pagination(pagination, 'admin.messages') }}
+</div>
+
+<script>
+function deleteMessage(messageId) {
+    if (confirm('确定要删除这条留言吗？')) {
+        const formData = new FormData();
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        fetch(`/admin/messages/${messageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('删除失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('删除失败，请重试');
+        });
+    }
+}
+</script>
+{% endblock %} 

@@ -1,0 +1,66 @@
+{% extends "main/base.html" %}
+
+{% block title %}留言板{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>留言板</h2>
+    <form action="{{ url_for('main.preview_message') }}" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-group">
+            <label for="content">留言内容</label>
+            <textarea class="form-control" id="content" name="content" rows="5" maxlength="{{ site_config.max_message_length }}" required></textarea>
+            <small class="form-text text-muted">
+                还可以输入 <span id="remainingChars">{{ site_config.max_message_length }}</span> 个字符
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label for="contact">联系方式（选填）</label>
+            <input type="text" class="form-control" id="contact" name="contact" placeholder="邮箱、QQ或其他联系方式">
+        </div>
+        
+        <div class="form-check mb-3">
+            <input type="checkbox" class="form-check-input" id="allow_public" name="allow_public" value="true" checked>
+            <label class="form-check-label" for="allow_public">允许公开</label>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">预览</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const maxLength = parseInt('{{ site_config.max_message_length }}');
+    const textarea = document.getElementById('content');
+    const remainingChars = document.getElementById('remainingChars');
+    
+    textarea.addEventListener('input', function() {
+        const remaining = maxLength - this.value.length;
+        remainingChars.textContent = remaining;
+    });
+    /*
+    const attachment = document.getElementById('attachment');
+    const fileSize = document.getElementById('fileSize');
+    const clearAttachment = document.getElementById('clearAttachment');
+    
+    attachment.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const size = Math.round(this.files[0].size / 1024);
+            fileSize.textContent = `文件大小: ${size} KB`;
+            clearAttachment.style.display = 'block';
+        } else {
+            fileSize.textContent = '';
+            clearAttachment.style.display = 'none';
+        }
+    });
+    
+    clearAttachment.addEventListener('click', function() {
+        attachment.value = '';
+        fileSize.textContent = '';
+        this.style.display = 'none';
+    });
+    */
+});
+</script>
+{% endblock %} 

@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
-from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time
+from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time, Message, IPRecord
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -395,12 +395,22 @@ def delete_post(post_id):
     """
     try:
         current_app.logger.info(f"开始删除文章，ID: {post_id}")
+        current_app.logger.info(f"请求方法: {request.method}")
+        current_app.logger.info(f"请求头: {dict(request.headers)}")
+        current_app.logger.info(f"表单数据: {dict(request.form)}")
+        
+        # 验证CSRF token
+        csrf_token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken')
+        current_app.logger.info(f"CSRF Token: {csrf_token}")
+        
         post = Post.objects(id=validate_object_id(post_id)).first_or_404()
         current_app.logger.info(f"找到要删除的文章: {post.title}")
         
         # 删除所有附件文件
         if post.attachments:
             upload_folder = ensure_upload_folder()
+            current_app.logger.info(f"开始删除附件文件，共 {len(post.attachments)} 个")
+            
             for attachment in post.attachments:
                 file_path = upload_folder / attachment['stored_filename']
                 try:
@@ -414,56 +424,49 @@ def delete_post(post_id):
         post.delete()
         current_app.logger.info(f"文章删除成功，ID: {post_id}")
         return jsonify({'status': 'success'})
+        
     except Exception as e:
-        current_app.logger.error(f"删除文章失败，ID: {post_id}, 错误: {str(e)}")
+        current_app.logger.error(f"删除文章失败，ID: {post_id}, 错误类型: {type(e)}, 错误信息: {str(e)}")
+        current_app.logger.error(f"错误详情: ", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @admin.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    """
-    网站设置
-    
-    GET请求：显示设置表单
-    POST请求：更新网站配置
-    """
+    """网站设置"""
     if request.method == 'POST':
         try:
-            current_app.logger.info("开始更新网站配置")
-            for config in SiteConfig.objects.all():
-                value = request.form.get(config.key)
-                old_value = config.value
-                
-                if config.type == 'bool':
-                    value = request.form.get(config.key, 'false') == 'on'
-                elif value is not None:
-                    value = value.strip()
-                
-                if value is not None and value != old_value:
-                    try:
-                        current_app.logger.info(f"更新配置项: {config.key}, {old_value} -> {value}")
-                        config.value = value
-                        config.save()
-                    except ValidationError as e:
-                        current_app.logger.error(f"配置项 {config.key} 更新失败: {str(e)}")
-                        flash(f'配置项 {config.description} 的值无效: {str(e)}')
-                        return redirect(url_for('admin.settings'))
+            # 获取所有配置项
+            configs = SiteConfig.objects
             
-            current_app.logger.info("网站配置更新成功")
-            flash('配置已更新')
-            return redirect(url_for('admin.settings'))
+            # 先处理所有布尔类型的配置，将未出现在表单中的设置为 false
+            bool_configs = configs(type='bool')
+            for config in bool_configs:
+                config.value = str(config.key in request.form).lower()
+                config.save()
             
+            # 处理其他类型的配置
+            for key, value in request.form.items():
+                if key == 'csrf_token':
+                    continue
+                    
+                config = configs(key=key).first()
+                if config and config.type != 'bool':  # 跳过布尔类型，因为已经处理过了
+                    if config.type == 'int':
+                        config.value = str(int(value))
+                    else:  # str
+                        config.value = str(value)
+                    config.save()
+                    
+            current_app.logger.info('网站设置已更新')
+            flash('设置已保存', 'success')
         except Exception as e:
-            current_app.logger.error(f"更新网站配置失败: {str(e)}")
-            flash('更新配置时出错，请重试')
-            return redirect(url_for('admin.settings'))
-    
-    current_app.logger.info("获取所有网站配置")
-    configs = {}
-    for config in SiteConfig.objects.all():
-        configs[config.key] = config.value
-    
-    return render_template('admin/settings.html', site_config=configs)
+            current_app.logger.error(f'保存设置失败: {str(e)}')
+            flash('保存失败，请重试', 'danger')
+            
+    # 获取所有配置
+    site_config = SiteConfig.get_configs()
+    return render_template('admin/settings.html', site_config=site_config)
 
 @admin.route('/post/<post_id>/attachment/<filename>')
 @login_required
@@ -517,8 +520,18 @@ def delete_attachment(post_id, filename):
     """
     try:
         current_app.logger.info(f"开始删除附件，文章ID: {post_id}, 文件名: {filename}")
-        post = Post.objects.get_or_404(id=post_id)
         
+        # 验证CSRF token
+        csrf_token = request.form.get('csrf_token')
+        if not csrf_token:
+            current_app.logger.error("缺少CSRF token")
+            return 'CSRF token missing', 400
+            
+        post = Post.objects.get_or_404(id=validate_object_id(post_id))
+        current_app.logger.info(f"找到文章: {post.title}")
+        
+        # 查找并删除附件
+        found = False
         for i, attachment in enumerate(post.attachments):
             if attachment['stored_filename'] == filename:
                 try:
@@ -527,49 +540,69 @@ def delete_attachment(post_id, filename):
                     if file_path.exists():
                         current_app.logger.info(f"删除文件: {file_path}")
                         file_path.unlink()
+                    
+                    current_app.logger.info(f"从数据库中移除附件记录: {attachment['filename']}")
+                    post.attachments.pop(i)
+                    post.updated_at = get_utc_time()
+                    post.save()
+                    found = True
+                    break
+                    
                 except OSError as e:
                     current_app.logger.error(f"删除文件失败: {str(e)}")
-                
-                current_app.logger.info(f"从数据库中移除附件记录: {attachment['filename']}")
-                post.attachments.pop(i)
-                post.updated_at = get_utc_time()
-                post.save()
-                
-                return '', 204
+                    return jsonify({'error': '删除文件失败'}), 500
         
-        current_app.logger.warning(f"附件不存在: {filename}")
-        return 'Attachment not found', 404
+        if not found:
+            current_app.logger.warning(f"附件不存在: {filename}")
+            return jsonify({'error': '附件不存在'}), 404
+            
+        return jsonify({'status': 'success'})
         
     except Exception as e:
         current_app.logger.error(f"删除附件失败: {str(e)}")
-        return 'Internal server error', 500
+        return jsonify({'error': str(e)}), 500
 
-@admin.route('/post/<post_id>/pin', methods=['POST'])
+@admin.route('/posts/<post_id>/pin', methods=['POST'])
 @login_required
 def toggle_pin(post_id):
-    """
-    切换文章的置顶状态
-    
-    Args:
-        post_id: 文章ID
-    """
+    """切换文章置顶状态"""
     try:
-        current_app.logger.info(f"开始切换文章置顶状态，ID: {post_id}")
-        post = Post.objects(id=post_id).first_or_404()
-        data = request.get_json()
-        is_pinned = data.get('is_pinned', False)
+        post = Post.objects(id=post_id).first()
+        if not post:
+            return jsonify({'success': False, 'message': '文章不存在'})
         
-        if is_pinned:
-            current_app.logger.info("取消其他文章的置顶状态")
-            Post.objects(is_pinned=True).update(is_pinned=False)
-        
-        current_app.logger.info(f"更新文章置顶状态: {is_pinned}")
+        # 切换置顶状态
+        is_pinned = not post.is_pinned
         Post.objects(id=post_id).update(is_pinned=is_pinned)
         
-        return '', 204
+        return jsonify({
+            'success': True,
+            'is_pinned': is_pinned
+        })
     except Exception as e:
-        current_app.logger.error(f"切换文章置顶状态失败: {str(e)}")
-        return 'Internal server error', 500
+        current_app.logger.error(f'切换文章置顶状态失败: {str(e)}')
+        return jsonify({'success': False, 'message': '操作失败，请重试'})
+
+@admin.route('/posts/<post_id>/visibility', methods=['POST'])
+@login_required
+def toggle_visibility(post_id):
+    """切换文章可见性"""
+    try:
+        post = Post.objects(id=post_id).first()
+        if not post:
+            return jsonify({'success': False, 'message': '文章不存在'})
+        
+        # 切换可见性状态
+        is_visible = not post.is_visible
+        Post.objects(id=post_id).update(is_visible=is_visible)
+        
+        return jsonify({
+            'success': True,
+            'is_visible': is_visible
+        })
+    except Exception as e:
+        current_app.logger.error(f'切换文章可见性失败: {str(e)}')
+        return jsonify({'success': False, 'message': '操作失败，请重试'})
 
 @admin.route('/admins')
 @login_required
@@ -579,37 +612,36 @@ def admins():
     return render_template('admin/admins.html', admins=admins)
 
 @admin.route('/admins/<admin_id>/username', methods=['POST'])
-@login_required
-def update_username(admin_id):
-    """
-    更新管理员用户名
+def change_username(admin_id):
+    """修改管理员用户名"""
+    if not current_user.is_authenticated:
+        return jsonify({'success': False, 'message': '请先登录'}), 401
     
-    Args:
-        admin_id: 管理员ID
-    """
-    try:
-        current_app.logger.info(f"开始更新管理员用户名，ID: {admin_id}")
-        admin = Admin.objects.get_or_404(id=validate_object_id(admin_id))
+    # 验证ObjectId
+    if not validate_object_id(admin_id):
+        return jsonify({'success': False, 'message': '无效的管理员ID'}), 400
         
-        new_username = sanitize_string(request.form.get('new_username', '').strip())
-        if not new_username:
-            current_app.logger.warning("新用户名为空")
-            return '用户名不能为空', 400
+    # 获取新用户名
+    new_username = request.form.get('username', '').strip()
+    if not new_username:
+        return jsonify({'success': False, 'message': '用户名不能为空'}), 400
+    
+    # 检查用户名是否已存在
+    if Admin.objects(username=new_username).first():
+        return jsonify({'success': False, 'message': '用户名已存在'}), 400
+    
+    # 更新用户名
+    try:
+        admin = Admin.objects(id=admin_id).first()
+        if not admin:
+            return jsonify({'success': False, 'message': '管理员不存在'}), 404
             
-        if Admin.objects(username=new_username, id__ne=admin.id).first():
-            current_app.logger.warning(f"用户名已存在: {new_username}")
-            return '用户名已存在', 400
-            
-        old_username = admin.username
         admin.username = new_username
         admin.save()
-        current_app.logger.info(f"管理员用户名更新成功: {old_username} -> {new_username}")
-        
-        return '', 204
-        
+        return jsonify({'success': True, 'message': '用户名修改成功'})
     except Exception as e:
-        current_app.logger.error(f"更新管理员用户名失败: {str(e)}")
-        return '操作失败，请重试', 500
+        current_app.logger.error(f'修改用户名失败: {str(e)}')
+        return jsonify({'success': False, 'message': '修改失败，请重试'}), 500
 
 @admin.route('/admins/change_password', methods=['POST'])
 @login_required
@@ -641,25 +673,92 @@ def admin_change_password():
         current_app.logger.error(f"修改管理员密码失败: {str(e)}")
         return '操作失败，请重试', 500
 
-@admin.route('/post/<post_id>/visibility', methods=['POST'])
+@admin.route('/messages')
 @login_required
-def toggle_visibility(post_id):
-    """
-    切换文章的可见状态
+def messages():
+    """留言管理页面"""
+    page = request.args.get('page', 1, type=int)
+    site_config = SiteConfig.get_message_configs()
+    per_page = site_config['messages_per_page']
     
-    Args:
-        post_id: 文章ID
-    """
-    try:
-        current_app.logger.info(f"开始切换文章可见状态，ID: {post_id}")
-        post = Post.objects(id=post_id).first_or_404()
-        data = request.get_json()
-        is_visible = data.get('is_visible', True)
-        
-        current_app.logger.info(f"更新文章可见状态: {is_visible}")
-        Post.objects(id=post_id).update(is_visible=is_visible)
-        
-        return '', 204
-    except Exception as e:
-        current_app.logger.error(f"切换文章可见状态失败: {str(e)}")
-        return 'Internal server error', 500 
+    pagination = Message.objects.order_by('-created_at').paginate(
+        page=page, per_page=per_page
+    )
+    
+    return render_template('admin/messages.html', 
+                         pagination=pagination,
+                         show_ip=True)
+
+@admin.route('/messages/<message_id>')
+@login_required
+def view_message(message_id):
+    """查看留言详情"""
+    message = Message.objects(id=message_id).first_or_404()
+    ip_record = None
+    if message.ip_address:
+        ip_record = IPRecord.objects(ip_address=message.ip_address).first()
+    
+    return render_template('admin/view_message.html',
+                         message=message,
+                         ip_record=ip_record,
+                         show_ip=True)
+
+@admin.route('/messages/<message_id>', methods=['DELETE'])
+@login_required
+def delete_message(message_id):
+    """删除留言"""
+    message = Message.objects(id=message_id).first_or_404()
+    
+    # 如果有附件，删除附件文件
+    if message.attachment:
+        try:
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 
+                                   message.attachment['stored_filename'])
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            current_app.logger.error(f'删除附件文件失败：{str(e)}')
+    
+    # 更新IP记录
+    if message.ip_address:
+        ip_record = IPRecord.objects(ip_address=message.ip_address).first()
+        if ip_record:
+            ip_record.message_count = max(0, ip_record.message_count - 1)
+            if ip_record.message_count == 0 and not ip_record.is_blocked:
+                ip_record.delete()
+            else:
+                ip_record.save()
+    
+    message.delete()
+    return jsonify({'success': True})
+
+@admin.route('/messages/<message_id>/public', methods=['POST'])
+@login_required
+def toggle_message_public(message_id):
+    """切换留言公开状态"""
+    message = Message.objects(id=message_id).first_or_404()
+    
+    if not message.allow_public:
+        return jsonify({
+            'success': False,
+            'message': '该留言不允许公开'
+        })
+    
+    message.is_public = not message.is_public
+    message.save()
+    
+    return jsonify({'success': True})
+
+@admin.route('/ip/<ip_address>/block', methods=['POST'])
+@login_required
+def toggle_ip_block(ip_address):
+    """切换IP限制状态"""
+    ip_record = IPRecord.objects(ip_address=ip_address).first()
+    
+    if not ip_record:
+        ip_record = IPRecord(ip_address=ip_address)
+    
+    ip_record.is_blocked = not ip_record.is_blocked
+    ip_record.save()
+    
+    return jsonify({'success': True}) 

@@ -31,6 +31,14 @@
             color: var(--text-color) !important;
         }
         
+        .navbar-toggler {
+            border-color: var(--text-color);
+        }
+        
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='%231976d2' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+        }
+        
         .nav-link:hover {
             color: #1565c0 !important;
             background-color: var(--secondary-color);
@@ -94,6 +102,7 @@
         .pagination .active .page-link {
             background-color: var(--text-color);
             border-color: var(--text-color);
+            color: white !important;
         }
         
         .modal-header {
@@ -111,40 +120,37 @@
 </head>
 <body>
     <!-- 导航栏 -->
-    <nav class="navbar navbar-expand-lg fixed-top">
+    {% block navbar %}
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                <img src="{{ url_for('static', filename='icons/logo.png') }}" alt="Logo" height="30" class="d-inline-block align-text-top">
+                <img src="{{ url_for('static', filename='icons/logo.png') }}" alt="Logo" width="30" height="30" class="d-inline-block align-top">
                 {{ site_config.site_title }}
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     {% if site_config.nav_home_visible %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" 
-                           href="{{ url_for('main.index') }}">
+                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" href="{{ url_for('main.index') }}">
                             {{ site_config.nav_home_text }}
                         </a>
                     </li>
                     {% endif %}
                     
-                    {% if site_config.nav_goods_visible %}
+                    {% if site_config.nav_message_visible %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.goods' %}active{% endif %}" 
-                           href="{{ url_for('main.goods') }}">
-                            {{ site_config.nav_goods_text }}
+                        <a class="nav-link {% if request.endpoint == 'main.message' %}active{% endif %}" href="{{ url_for('main.message') }}">
+                            {{ site_config.nav_message_text }}
                         </a>
                     </li>
                     {% endif %}
                     
                     {% if site_config.nav_about_visible %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.about' %}active{% endif %}" 
-                           href="{{ url_for('main.about') }}">
+                        <a class="nav-link {% if request.endpoint == 'main.about' %}active{% endif %}" href="{{ url_for('main.about') }}">
                             {{ site_config.nav_about_text }}
                         </a>
                     </li>
@@ -153,6 +159,7 @@
             </div>
         </div>
     </nav>
+    {% endblock %}
     
     <!-- 主要内容 -->
     <div class="main-content">

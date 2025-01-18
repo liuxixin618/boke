@@ -19,22 +19,24 @@
             </button>
             
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" 
-                           href="{{ url_for('admin.dashboard') }}">
+                        <a class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
                             <i class="bi bi-file-text"></i> 文章管理
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" 
-                           href="{{ url_for('admin.settings') }}">
+                        <a class="nav-link {% if request.endpoint == 'admin.messages' %}active{% endif %}" href="{{ url_for('admin.messages') }}">
+                            <i class="bi bi-chat-dots"></i> 留言管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.settings' %}active{% endif %}" href="{{ url_for('admin.settings') }}">
                             <i class="bi bi-gear"></i> 网站设置
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'admin.admins' %}active{% endif %}" 
-                           href="{{ url_for('admin.admins') }}">
+                        <a class="nav-link {% if request.endpoint == 'admin.admins' %}active{% endif %}" href="{{ url_for('admin.admins') }}">
                             <i class="bi bi-people"></i> 管理员
                         </a>
                     </li>

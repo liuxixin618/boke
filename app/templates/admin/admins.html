@@ -56,11 +56,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="editUsernameForm" method="post">
-                    <input type="hidden" id="editAdminId" name="admin_id">
-                    <div class="mb-3">
-                        <label for="newUsername" class="form-label">新用户名</label>
-                        <input type="text" class="form-control" id="newUsername" name="new_username" required>
+                <form id="editUsernameForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label for="username">新用户名</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
                     </div>
                 </form>
             </div>
@@ -81,7 +81,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <form id="changePasswordForm" method="post">
+                <form id="changePasswordForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="mb-3">
                         <label for="oldPassword" class="form-label">当前密码</label>
                         <input type="password" class="form-control" id="oldPassword" name="old_password" required>
@@ -112,8 +113,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showEditUsernameModal(adminId, currentUsername) {
-    document.getElementById('editAdminId').value = adminId;
-    document.getElementById('newUsername').value = currentUsername;
+    const form = document.getElementById('editUsernameForm');
+    form.dataset.adminId = adminId;
+    document.getElementById('username').value = currentUsername;
     window.editUsernameModal.show();
 }
 
@@ -124,22 +126,49 @@ function showChangePasswordModal() {
 
 function submitEditUsername() {
     const form = document.getElementById('editUsernameForm');
-    const adminId = document.getElementById('editAdminId').value;
+    const adminId = form.dataset.adminId;
+    console.log('Submitting for adminId:', adminId);
+    
+    if (!adminId) {
+        console.error('No adminId found');
+        alert('操作失败：无法获取管理员ID');
+        return;
+    }
+    
     const formData = new FormData(form);
+    formData.append('adminId', adminId);
     
     fetch(`/admin/admins/${adminId}/username`, {
         method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
         body: formData
-    }).then(response => {
-        if (response.ok) {
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                try {
+                    const data = JSON.parse(text);
+                    throw new Error(data.message || '操作失败');
+                } catch (e) {
+                    throw new Error('服务器响应错误，请重试');
+                }
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
             window.editUsernameModal.hide();
             location.reload();
         } else {
-            response.text().then(text => alert(text || '操作失败，请重试'));
+            throw new Error(data.message || '操作失败');
         }
-    }).catch(error => {
+    })
+    .catch(error => {
         console.error('Error:', error);
-        alert('操作失败，请重试');
+        alert(error.message || '操作失败，请重试');
     });
 }
 
@@ -154,17 +183,22 @@ function submitChangePassword() {
     
     fetch('/admin/admins/change_password', {
         method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
         body: formData
     }).then(response => {
-        if (response.ok) {
-            window.changePasswordModal.hide();
-            location.reload();
-        } else {
-            response.text().then(text => alert(text || '操作失败，请重试'));
+        if (!response.ok) {
+            return response.text().then(text => {
+                throw new Error(text);
+            });
         }
+        window.changePasswordModal.hide();
+        alert('密码修改成功');
+        location.reload();
     }).catch(error => {
         console.error('Error:', error);
-        alert('操作失败，请重试');
+        alert(error.message || '操作失败，请重试');
     });
 }
 </script>

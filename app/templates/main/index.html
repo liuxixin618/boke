@@ -1,304 +1,58 @@
 {% extends "main/base.html" %}
-
-{% block title %}首页{% endblock %}
+{% from "macros.html" import render_pagination %}
 
 {% block content %}
-<style>
-.search-form {
-    margin-bottom: 2rem;
-}
-.search-input {
-    border-radius: 20px;
-    padding-left: 1rem;
-    padding-right: 1rem;
-}
-.search-btn {
-    border-radius: 20px;
-    margin-left: 0.5rem;
-}
-.card-body {
-    cursor: pointer;
-}
-.card-body:hover {
-    background-color: rgba(0, 0, 0, 0.02);
-}
-/* 模态框样式 */
-.modal-body {
-    white-space: pre-wrap;
-    display: flex;
-    flex-direction: column;
-    height: 70vh;
-    padding: 0;
-}
-.modal-content-wrapper {
-    height: 75%;
-    overflow-y: auto;
-    padding: 1rem;
-    margin-bottom: 0;
-    text-indent: 0;  /* 确保没有首行缩进 */
-}
-.modal-footer-wrapper {
-    padding: 1rem;
-    border-top: 1px solid #dee2e6;
-    background-color: #f8f9fa;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-.modal-time-info {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.25rem 0;
-}
-.modal-time-info small {
-    margin: 0;
-    white-space: nowrap;
-}
-.download-all-btn {
-    display: inline-flex;
-    width: 100%;
-    height: 24px;
-    padding: 0;
-    margin: 0;
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    text-decoration: none;
-    color: #333;
-    justify-content: center;
-    align-items: center;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    line-height: 1;
-}
-.download-all-btn:hover {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-    color: #000;
-    text-decoration: none;
-}
-/* 移除可能影响按钮的其他样式 */
-.download-all-btn.btn,
-button.download-all-btn {
-    padding: 0;
-    line-height: 1;
-    margin: 0;
-}
-/* 自定义滚动条样式 */
-.modal-content-wrapper::-webkit-scrollbar,
-.modal-footer-wrapper::-webkit-scrollbar {
-    width: 6px;
-}
-.modal-content-wrapper::-webkit-scrollbar-track,
-.modal-footer-wrapper::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-.modal-content-wrapper::-webkit-scrollbar-thumb,
-.modal-footer-wrapper::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 3px;
-}
-.modal-content-wrapper::-webkit-scrollbar-thumb:hover,
-.modal-footer-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}
-/* 添加新的样式来处理内容 */
-.modal-content-text {
-    margin: 0;
-    padding: 0;
-    text-indent: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: break-all;
-}
-/* 添加分页样式 */
-.pagination .page-item.active .page-link {
-    background-color: #0d6efd;  /* Bootstrap 主色调 */
-    border-color: #0d6efd;
-    color: #fff;  /* 白色文字 */
-}
-</style>
-
 <div class="container">
     <div class="row">
-        <div class="col-12">
-            <!-- 搜索表单 -->
-            <form class="search-form" method="GET" action="{{ url_for('main.index') }}">
-                <div class="input-group">
-                    <input type="text" 
-                           class="form-control search-input" 
-                           name="search" 
-                           placeholder="搜索文章..."
-                           value="{{ request.args.get('search', '') }}"
-                           aria-label="搜索文章">
-                    <button class="btn btn-primary search-btn" type="submit">
-                        <i class="bi bi-search"></i> 搜索
-                    </button>
-                    {% if request.args.get('search') %}
-                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary search-btn">
-                        <i class="bi bi-x"></i> 清除
-                    </a>
-                    {% endif %}
-                </div>
-            </form>
-
+        <div class="col-md-8">
             {% if request.args.get('search') %}
-            <div class="alert alert-info mb-4">
-                搜索结果: "{{ request.args.get('search') }}" 
-                <small>(共找到 {{ posts.total }} 篇文章)</small>
+            <div class="alert alert-info">
+                搜索结果：{{ posts.total }} 篇文章
+                <a href="{{ url_for('main.index') }}" class="float-end">清除搜索</a>
             </div>
             {% endif %}
 
             {% for post in posts.items %}
             <div class="card mb-4">
-                <div class="card-body" onclick="openPostModal('{{ post.id }}')">
-                    <h2 class="card-title">
-                        {% if post.is_pinned %}
-                        <i class="bi bi-pin-angle-fill text-danger"></i>
-                        {% endif %}
-                        {{ post.title }}
-                    </h2>
-                    
-                    <div class="card-text">{{ post.content[:site_config.content_preview_length|int] }}{% if post.content|length > site_config.content_preview_length|int %}...{% endif %}</div>
-                    
-                    <div class="text-muted mt-3">
-                        <small>
-                            发布于: {{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% if post.local_updated_at and post.local_updated_at != post.local_created_at %}
-                            | 更新于: {{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}
-                            {% endif %}
-                        </small>
-                    </div>
-                    
-                    {% if post.attachments %}
-                    <div class="mt-3" onclick="event.stopPropagation();">
-                        <h6>附件：</h6>
-                        <div class="list-group">
-                            {% for attachment in post.attachments %}
-                            <a href="{{ url_for('main.download_attachment', filename=attachment.stored_filename) }}" 
-                               class="list-group-item list-group-item-action">
-                                {{ attachment.filename }}
-                            </a>
-                            {% endfor %}
-                        </div>
-                    </div>
+                <div class="card-body">
+                    {% if post.is_pinned %}
+                    <span class="badge bg-danger mb-2">置顶</span>
                     {% endif %}
-                </div>
-            </div>
-
-            <!-- 修改后的文章详情模态框 -->
-            <div class="modal fade" id="postModal{{ post.id }}" tabindex="-1">
-                <div class="modal-dialog modal-lg modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">{{ post.title }}</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="modal-content-wrapper">
-                                <div class="modal-content-text">{{- post.content -}}</div>
-                            </div>
-                            <div class="modal-footer-wrapper">
-                                <div class="modal-time-info">
-                                    <small>发布于: {{ post.local_created_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-                                    {% if post.local_updated_at and post.local_updated_at != post.local_created_at %}
-                                    <small>更新于: {{ post.local_updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</small>
-                                    {% endif %}
-                                </div>
-                                {% if post.attachments %}
-                                <!-- 隐藏的附件链接数据 -->
-                                <div style="display: none;">
-                                    {% for attachment in post.attachments %}
-                                    <span data-attachment-url="{{ url_for('main.download_attachment', filename=attachment.stored_filename) }}"></span>
-                                    {% endfor %}
-                                </div>
-                                <button type="button" class="download-all-btn" onclick="downloadAllAttachments('{{ post.id }}')" style="border: 0;">
-                                    <span style="display: inline-block; line-height: 1;">下载所有附件</span>
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+                    <h2 class="card-title h4">
+                        <a href="{{ url_for('main.post', post_id=post.id) }}" class="text-decoration-none">{{ post.title }}</a>
+                    </h2>
+                    <p class="card-text text-muted small">
+                        发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        {% if post.updated_at and post.updated_at != post.created_at %}
+                        · 更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        {% endif %}
+                    </p>
+                    <p class="card-text">{{ post.content[:(site_config.content_preview_length|int)] }}...</p>
+                    <a href="{{ url_for('main.post', post_id=post.id) }}" class="btn btn-primary btn-sm">阅读全文</a>
                 </div>
             </div>
             {% else %}
-            <div class="text-center">
-                <p class="text-muted">暂无文章</p>
+            <div class="alert alert-info">
+                暂无文章
             </div>
             {% endfor %}
-            
-            {% if posts.pages > 1 %}
-            <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if posts.has_prev %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.index', page=posts.prev_num, search=request.args.get('search', '')) }}">
-                            上一页
-                        </a>
-                    </li>
-                    {% endif %}
-                    
-                    {% for page in posts.iter_pages() %}
-                        {% if page %}
-                            {% if page != posts.page %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ url_for('main.index', page=page, search=request.args.get('search', '')) }}">
-                                    {{ page }}
-                                </a>
-                            </li>
-                            {% else %}
-                            <li class="page-item active">
-                                <span class="page-link">{{ page }}</span>
-                            </li>
-                            {% endif %}
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">...</span>
-                            </li>
-                        {% endif %}
-                    {% endfor %}
-                    
-                    {% if posts.has_next %}
-                    <li class="page-item">
-                        <a class="page-link" href="{{ url_for('main.index', page=posts.next_num, search=request.args.get('search', '')) }}">
-                            下一页
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </nav>
-            {% endif %}
+
+            {{ render_pagination(posts, 'main.index') }}
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">搜索</h5>
+                    <form action="{{ url_for('main.index') }}" method="get">
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search" value="{{ request.args.get('search', '') }}" placeholder="搜索文章...">
+                            <button class="btn btn-outline-primary" type="submit">搜索</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
-
-<script>
-function openPostModal(postId) {
-    const modal = new bootstrap.Modal(document.getElementById(`postModal${postId}`));
-    modal.show();
-}
-
-function downloadAllAttachments(postId) {
-    // 获取当前文章的所有附件链接
-    const attachmentLinks = Array.from(document.querySelectorAll(`#postModal${postId} [data-attachment-url]`))
-        .map(el => el.dataset.attachmentUrl);
-    
-    // 按顺序下载所有附件
-    let index = 0;
-    function downloadNext() {
-        if (index < attachmentLinks.length) {
-            const link = document.createElement('a');
-            link.href = attachmentLinks[index];
-            link.click();
-            index++;
-            // 延迟一秒下载下一个文件，避免浏览器阻止
-            setTimeout(downloadNext, 1000);
-        }
-    }
-    downloadNext();
-}
-</script>
 {% endblock %} 

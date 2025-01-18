@@ -1,0 +1,36 @@
+{% extends "main/base.html" %}
+
+{% block title %}预览留言{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>预览留言</h2>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">留言内容</h5>
+            <p class="card-text">{{ message.content }}</p>
+            
+            <h5 class="card-title">联系方式</h5>
+            <p class="card-text">{{ message.contact or '匿名' }}</p>
+            
+            <h5 class="card-title">是否允许公开</h5>
+            <p class="card-text">{{ '是' if message.allow_public else '否' }}</p>
+        </div>
+    </div>
+
+    <form action="{{ url_for('main.submit_message') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="content" value="{{ message.content }}">
+        <input type="hidden" name="contact" value="{{ message.contact }}">
+        <input type="hidden" name="allow_public" value="{{ 'true' if message.allow_public else 'false' }}">
+        {% if message.attachment %}
+        <input type="hidden" name="attachment" value="{{ message.attachment|tojson }}">
+        {% endif %}
+        
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-secondary" onclick="history.back()">返回修改</button>
+            <button type="submit" class="btn btn-primary">确认提交</button>
+        </div>
+    </form>
+</div>
+{% endblock %} 

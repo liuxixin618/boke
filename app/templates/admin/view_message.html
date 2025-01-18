@@ -1,0 +1,156 @@
+{% extends "admin/base.html" %}
+
+{% block title %}查看留言{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">留言详情</h2>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary" onclick="togglePublic('{{ message.id }}')">
+                    {{ '取消公开' if message.is_public else '公开留言' }}
+                </button>
+                <button type="button" class="btn btn-danger" onclick="deleteMessage('{{ message.id }}')">删除留言</button>
+                {% if show_ip and message.ip_address %}
+                <button type="button" class="btn btn-warning" onclick="toggleIPBlock('{{ message.ip_address }}')">
+                    {{ '解除IP限制' if ip_record and ip_record.is_blocked else '限制此IP' }}
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="mb-4">
+                <h5 class="card-title">联系方式</h5>
+                <p class="card-text">{{ message.contact or '匿名' }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="card-title">留言内容</h5>
+                <p class="card-text">{{ message.content }}</p>
+            </div>
+
+            {% if show_ip %}
+            <div class="mb-4">
+                <h5 class="card-title">IP地址</h5>
+                <p class="card-text">{{ message.ip_address }}</p>
+                {% if ip_record %}
+                <p class="card-text">
+                    <small class="text-muted">
+                        该IP已发送 {{ ip_record.message_count }} 条留言
+                        {% if ip_record.is_blocked %}
+                        <span class="text-danger">（已被限制）</span>
+                        {% endif %}
+                    </small>
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <h5 class="card-title">留言时间</h5>
+                <p class="card-text">{{ moment(message.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}</p>
+            </div>
+
+            <div class="mb-4">
+                <h5 class="card-title">公开设置</h5>
+                <p class="card-text">
+                    允许公开：{{ '是' if message.allow_public else '否' }}<br>
+                    当前状态：{{ '已公开' if message.is_public else '未公开' }}
+                </p>
+            </div>
+
+            {% if message.attachment %}
+            <div class="mb-4">
+                <h5 class="card-title">附件</h5>
+                <p class="card-text">
+                    <a href="{{ url_for('main.download_message_attachment', message_id=message.id) }}" class="btn btn-sm btn-outline-primary">
+                        {{ message.attachment.filename }}
+                        <span class="text-muted">({{ message.attachment.file_size }} KB)</span>
+                    </a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function deleteMessage(messageId) {
+    if (confirm('确定要删除这条留言吗？')) {
+        const formData = new FormData();
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        fetch(`/admin/messages/${messageId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{{ url_for("admin.messages") }}';
+            } else {
+                alert('删除失败：' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('删除失败，请重试');
+        });
+    }
+}
+
+function togglePublic(messageId) {
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/messages/${messageId}/public`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('操作失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('操作失败，请重试');
+    });
+}
+
+function toggleIPBlock(ipAddress) {
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token() }}');
+    
+    fetch(`/admin/ip/${ipAddress}/block`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('操作失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('操作失败，请重试');
+    });
+}
+</script>
+{% endblock %} 

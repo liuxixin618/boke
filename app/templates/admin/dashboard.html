@@ -121,7 +121,7 @@
             button.addEventListener('click', function() {
                 const postId = this.dataset.postId;
                 const isPinned = this.dataset.isPinned === 'true';
-                togglePin(postId, !isPinned, this);
+                togglePin(this, postId);
             });
         });
 
@@ -131,7 +131,7 @@
             button.addEventListener('click', function() {
                 const postId = this.dataset.postId;
                 const isVisible = this.dataset.isVisible === 'true';
-                toggleVisibility(postId, !isVisible, this);
+                toggleVisibility(this, postId);
             });
         });
 
@@ -148,75 +148,91 @@
     });
 
     // 切换文章置顶状态
-    async function togglePin(postId, isPinned, button) {
-        try {
-            const response = await fetch(`/admin/post/${postId}/pin`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ is_pinned: isPinned })
-            });
-
-            if (response.ok) {
-                // 更新按钮状态
-                button.dataset.isPinned = isPinned;
-                button.innerHTML = isPinned ? 
-                    '<i class="bi bi-pin-angle-fill text-danger"></i>' : 
-                    '<i class="bi bi-pin-angle"></i>';
-                // 刷新页面以更新文章顺序
-                location.reload();
+    function togglePin(button, postId) {
+        const formData = new FormData();
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        fetch(`/admin/posts/${postId}/pin`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const icon = button.querySelector('i');
+                if (data.is_pinned) {
+                    icon.classList.remove('bi-pin');
+                    icon.classList.add('bi-pin-fill');
+                    button.title = '取消置顶';
+                } else {
+                    icon.classList.remove('bi-pin-fill');
+                    icon.classList.add('bi-pin');
+                    button.title = '置顶';
+                }
             } else {
-                alert('操作失败，请重试');
+                throw new Error(data.message || '操作失败');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('操作失败，请重试');
-        }
+        })
+        .catch(error => {
+            alert(error.message || '操作失败，请重试');
+        });
     }
 
     // 切换文章可见性
-    async function toggleVisibility(postId, isVisible, button) {
-        try {
-            const response = await fetch(`/admin/post/${postId}/visibility`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ is_visible: isVisible })
-            });
-
-            if (response.ok) {
-                // 更新按钮状态
-                button.dataset.isVisible = isVisible;
-                button.innerHTML = isVisible ? 
-                    '<i class="bi bi-eye-fill text-success"></i>' : 
-                    '<i class="bi bi-eye-slash text-secondary"></i>';
+    function toggleVisibility(button, postId) {
+        const formData = new FormData();
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
+        fetch(`/admin/posts/${postId}/visibility`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const icon = button.querySelector('i');
+                if (data.is_visible) {
+                    icon.classList.remove('bi-eye-slash');
+                    icon.classList.add('bi-eye');
+                    button.title = '隐藏';
+                } else {
+                    icon.classList.remove('bi-eye');
+                    icon.classList.add('bi-eye-slash');
+                    button.title = '显示';
+                }
             } else {
-                alert('操作失败，请重试');
+                throw new Error(data.message || '操作失败');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('操作失败，请重试');
-        }
+        })
+        .catch(error => {
+            alert(error.message || '操作失败，请重试');
+        });
     }
 
     // 删除文章
     async function deletePost(postId, button) {
         try {
+            const formData = new FormData();
+            formData.append('csrf_token', '{{ csrf_token() }}');
+            
             const response = await fetch(`/admin/post/${postId}/delete`, {
-                method: 'POST'
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: formData
             });
 
-            if (response.ok) {
-                // 移除整行
-                button.closest('tr').remove();
-            } else {
-                alert('删除失败，请重试');
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || '删除失败');
             }
+            
+            // 移除整行
+            button.closest('tr').remove();
         } catch (error) {
             console.error('Error:', error);
-            alert('删除失败，请重试');
+            alert(error.message || '删除失败，请重试');
         }
     }
 </script>

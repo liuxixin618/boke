@@ -163,62 +163,119 @@ class Attachment(db.Document):
 
 class SiteConfig(db.Document):
     """网站配置模型"""
-    key = db.StringField(required=True, unique=True)
-    value = db.DynamicField(required=True)
-    description = db.StringField()
-    type = db.StringField(choices=['str', 'int', 'bool', 'url'], default='str')
-
+    key = db.StringField(required=True, unique=True)  # 配置项键名
+    value = db.DynamicField(required=True)  # 配置项值
+    description = db.StringField()  # 配置项描述
+    type = db.StringField(required=True)  # 配置项类型
+    
     meta = {
         'collection': 'site_config',
         'indexes': ['key']
     }
-
-    def __init__(self, *args, **values):
-        super().__init__(*args, **values)
-        if 'value' in values and 'type' in values:
-            self.value = self._convert_value(values['value'], values['type'])
-
-    def _convert_value(self, value, value_type):
-        """根据类型转换值"""
-        if value is None:
-            return None
-        
-        if isinstance(value, str):
-            value = value.strip()
-        
-        try:
-            if value_type == 'int':
-                return int(value)
-            elif value_type == 'bool':
-                if isinstance(value, bool):
-                    return value
-                if isinstance(value, str):
-                    return value.lower() == 'true' or value == 'on'
-                return bool(value)
-            elif value_type in ['str', 'url']:
-                return str(value)
-        except (ValueError, TypeError) as e:
-            current_app.logger.error(f"配置值转换失败: key={self.key}, value={value}, type={value_type}, error={str(e)}")
-            raise ValidationError(f'无法将值 "{value}" 转换为类型 {value_type}')
-        
-        return value
-
-    def clean(self):
-        """在保存前验证和转换值"""
-        if self.value is not None:
-            self.value = self._convert_value(self.value, self.type)
-
-    def save(self, *args, **kwargs):
-        """保存配置"""
-        current_app.logger.info(f"保存配置: {self.key}={self.value}")
-        return super(SiteConfig, self).save(*args, **kwargs)
-
+    
     @classmethod
     def get_config(cls, key, default=None):
-        """获取配置值"""
+        """获取配置项值"""
         config = cls.objects(key=key).first()
-        if config:
-            current_app.logger.debug(f"获取配置: {key}={config.value}")
-            return config.value
-        current_app.logger.debug(f"配置不存在，使用默认值: {key}={default}")
-        return default 
+        if not config:
+            return default
+        return config.get_typed_value()
+    
+    @classmethod
+    def get_configs(cls):
+        """获取所有配置项"""
+        configs = {}
+        for config in cls.objects:
+            configs[config.key] = config.get_typed_value()
+        return configs
+    
+    @classmethod
+    def get_message_configs(cls):
+        """获取留言相关配置"""
+        keys = [
+            'max_message_length',
+            'max_messages_per_ip',
+            'messages_per_page',
+            'nav_message_text',
+            'nav_message_visible'
+        ]
+        configs = {}
+        for key in keys:
+            config = cls.objects(key=key).first()
+            if config:
+                configs[key] = config.get_typed_value()
+        return configs
+    
+    def get_typed_value(self):
+        """获取类型转换后的值"""
+        if not self.value:
+            return None
+            
+        try:
+            if self.type == 'int':
+                return int(self.value)
+            elif self.type == 'float':
+                return float(self.value)
+            elif self.type == 'bool':
+                if isinstance(self.value, bool):
+                    return self.value
+                return str(self.value).lower() in ('true', '1', 'yes', 'on')
+            elif self.type == 'str':
+                return str(self.value)
+            else:
+                return self.value
+        except (ValueError, TypeError):
+            return None
+    
+    def set_value(self, value):
+        """设置配置项值"""
+        if self.type == 'int':
+            self.value = int(value)
+        elif self.type == 'float':
+            self.value = float(value)
+        elif self.type == 'bool':
+            if isinstance(value, bool):
+                self.value = value
+            else:
+                self.value = str(value).lower() in ('true', '1', 'yes', 'on')
+        elif self.type == 'str':
+            self.value = str(value)
+        else:
+            self.value = value
+
+class Message(db.Document):
+    """留言模型"""
+    content = db.StringField(required=True)  # 留言内容
+    contact = db.StringField()  # 联系方式
+    allow_public = db.BooleanField(default=True)  # 是否允许公开
+    is_public = db.BooleanField(default=False)  # 是否已公开
+    created_at = db.DateTimeField(default=get_utc_time)  # 留言时间
+    ip_address = db.StringField()  # IP地址
+    attachment = db.DictField()  # 附件信息
+
+    meta = {
+        'collection': 'message',
+        'ordering': ['-created_at'],
+        'indexes': [
+            'ip_address',
+            'created_at',
+            'is_public'
+        ]
+    }
+
+    @property
+    def local_created_at(self):
+        """获取本地时区的创建时间"""
+        return convert_to_local_time(self.created_at)
+
+class IPRecord(db.Document):
+    """IP记录模型"""
+    ip_address = db.StringField(required=True, unique=True)  # IP地址
+    message_count = db.IntField(default=0)  # 留言数量
+    is_blocked = db.BooleanField(default=False)  # 是否被禁止留言
+    last_message_at = db.DateTimeField()  # 最后留言时间
+
+    meta = {
+        'collection': 'ip_record',
+        'indexes': ['ip_address', 'is_blocked']
+    } 

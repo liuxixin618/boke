@@ -1,166 +1,112 @@
 {% extends "admin/base.html" %}
 
-{% block title %}网站配置{% endblock %}
+{% block title %}网站设置{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">网站配置</h2>
-                    
-                    <form method="post">
-                        <!-- 基础配置 -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">基础配置</h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="mb-3">
-                                    <label for="site_title" class="form-label">网站标题</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="site_title" 
-                                           name="site_title" 
-                                           value="{{ site_config.site_title }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="content_preview_length" class="form-label">博客内容预览长度（字符数）</label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="content_preview_length" 
-                                           name="content_preview_length" 
-                                           value="{{ site_config.content_preview_length }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="posts_per_page" class="form-label">每页显示的博客数量</label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="posts_per_page" 
-                                           name="posts_per_page" 
-                                           value="{{ site_config.posts_per_page }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="icp_text" class="form-label">页脚备案信息文本</label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="icp_text" 
-                                           name="icp_text" 
-                                           value="{{ site_config.icp_text }}">
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="icp_link" class="form-label">备案信息链接地址</label>
-                                    <input type="url" 
-                                           class="form-control" 
-                                           id="icp_link" 
-                                           name="icp_link" 
-                                           value="{{ site_config.icp_link }}">
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 导航栏配置 -->
-                        <div class="card mb-4">
-                            <div class="card-header">
-                                <h5 class="card-title mb-0">导航栏配置</h5>
-                            </div>
-                            <div class="card-body">
-                                <!-- 首页 -->
-                                <div class="mb-4">
-                                    <h6 class="mb-3">首页</h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="nav_home_text" class="form-label">显示文本</label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="nav_home_text" 
-                                                   name="nav_home_text" 
-                                                   value="{{ site_config.nav_home_text }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="nav_home_visible" 
-                                                       name="nav_home_visible" 
-                                                       {% if site_config.nav_home_visible %}checked{% endif %}>
-                                                <label class="form-check-label" for="nav_home_visible">
-                                                    显示此项
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- 好物分享 -->
-                                <div class="mb-4">
-                                    <h6 class="mb-3">好物分享</h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="nav_goods_text" class="form-label">显示文本</label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="nav_goods_text" 
-                                                   name="nav_goods_text" 
-                                                   value="{{ site_config.nav_goods_text }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="nav_goods_visible" 
-                                                       name="nav_goods_visible" 
-                                                       {% if site_config.nav_goods_visible %}checked{% endif %}>
-                                                <label class="form-check-label" for="nav_goods_visible">
-                                                    显示此项
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- 关于作者 -->
-                                <div class="mb-4">
-                                    <h6 class="mb-3">关于作者</h6>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label for="nav_about_text" class="form-label">显示文本</label>
-                                            <input type="text" 
-                                                   class="form-control" 
-                                                   id="nav_about_text" 
-                                                   name="nav_about_text" 
-                                                   value="{{ site_config.nav_about_text }}">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-check mt-4">
-                                                <input type="checkbox" 
-                                                       class="form-check-input" 
-                                                       id="nav_about_visible" 
-                                                       name="nav_about_visible" 
-                                                       {% if site_config.nav_about_visible %}checked{% endif %}>
-                                                <label class="form-check-label" for="nav_about_visible">
-                                                    显示此项
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">保存</button>
-                            <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">返回</a>
-                        </div>
-                    </form>
+<div class="container mt-4">
+    <h2>网站设置</h2>
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <h4 class="mt-4">基本设置</h4>
+        <div class="form-group">
+            <label for="site_title">网站标题</label>
+            <input type="text" class="form-control" id="site_title" name="site_title" value="{{ site_config.site_title }}" required>
+        </div>
+        
+        <h4 class="mt-4">博客设置</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="posts_per_page">每页显示的博客数量</label>
+                    <input type="number" class="form-control" id="posts_per_page" name="posts_per_page" value="{{ site_config.posts_per_page }}" required min="1">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="content_preview_length">博客内容预览长度</label>
+                    <input type="number" class="form-control" id="content_preview_length" name="content_preview_length" value="{{ site_config.content_preview_length }}" required min="1">
                 </div>
             </div>
         </div>
-    </div>
+        
+        <h4 class="mt-4">导航栏设置</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="nav_home_text">首页导航文本</label>
+                    <input type="text" class="form-control" id="nav_home_text" name="nav_home_text" value="{{ site_config.nav_home_text }}" required>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="nav_home_visible" name="nav_home_visible" {% if site_config.nav_home_visible %}checked{% endif %}>
+                    <label class="form-check-label" for="nav_home_visible">显示首页导航</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="nav_message_text">留言板导航文本</label>
+                    <input type="text" class="form-control" id="nav_message_text" name="nav_message_text" value="{{ site_config.nav_message_text }}" required>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="nav_message_visible" name="nav_message_visible" {% if site_config.nav_message_visible %}checked{% endif %}>
+                    <label class="form-check-label" for="nav_message_visible">显示留言板导航</label>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="nav_about_text">关于导航文本</label>
+                    <input type="text" class="form-control" id="nav_about_text" name="nav_about_text" value="{{ site_config.nav_about_text }}" required>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="nav_about_visible" name="nav_about_visible" {% if site_config.nav_about_visible %}checked{% endif %}>
+                    <label class="form-check-label" for="nav_about_visible">显示关于导航</label>
+                </div>
+            </div>
+        </div>
+        
+        <h4 class="mt-4">留言设置</h4>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="max_message_length">留言内容最大长度</label>
+                    <input type="number" class="form-control" id="max_message_length" name="max_message_length" value="{{ site_config.max_message_length }}" required min="1">
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="max_messages_per_ip">每个IP最多可提交留言数</label>
+                    <input type="number" class="form-control" id="max_messages_per_ip" name="max_messages_per_ip" value="{{ site_config.max_messages_per_ip }}" required min="1">
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="messages_per_page">留言管理每页显示数量</label>
+                    <input type="number" class="form-control" id="messages_per_page" name="messages_per_page" value="{{ site_config.messages_per_page }}" required min="1">
+                </div>
+            </div>
+        </div>
+        
+        <h4 class="mt-4">页脚设置</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="beian_text">备案信息文本</label>
+                    <input type="text" class="form-control" id="icp_text" name="icp_text" value="{{ site_config.icp_text }}">
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="beian_link">备案信息链接地址</label>
+                    <input type="text" class="form-control" id="icp_link" name="icp_link" value="{{ site_config.icp_link }}">
+                </div>
+            </div>
+        </div>
+        
+        <button type="submit" class="btn btn-primary mt-4">保存设置</button>
+    </form>
 </div>
 {% endblock %} 

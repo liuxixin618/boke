@@ -10,7 +10,8 @@
                 <div class="card-body">
                     <h2 class="card-title mb-4">{% if post %}编辑文章{% else %}新建文章{% endif %}</h2>
                     
-                    <form method="post" enctype="multipart/form-data">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <div class="mb-3">
                             <label for="title" class="form-label">标题</label>
                             <input type="text" 
@@ -94,19 +95,33 @@ async function deleteAttachment(postId, filename, button) {
     }
     
     try {
+        const csrfTokenInput = document.querySelector('input[name="csrf_token"]');
+        if (!csrfTokenInput) {
+            throw new Error('CSRF token not found');
+        }
+        const csrfToken = csrfTokenInput.value;
+        
+        const formData = new FormData();
+        formData.append('csrf_token', csrfToken);
+        
         const response = await fetch(`/admin/post/${postId}/attachment/${filename}/delete`, {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
         });
         
         if (response.ok) {
             // 移除整个附件项
             button.closest('.list-group-item').remove();
         } else {
-            alert('删除失败，请重试');
+            const data = await response.json();
+            throw new Error(data.error || '删除失败，请重试');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('删除失败，请重试');
+        alert(error.message || '删除失败，请重试');
     }
 }
 </script>

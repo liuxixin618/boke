@@ -1,0 +1,51 @@
+{% extends "main/base.html" %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <article class="card">
+                <div class="card-body">
+                    {% if post.is_pinned %}
+                    <span class="badge bg-danger mb-2">置顶</span>
+                    {% endif %}
+                    
+                    <h1 class="card-title">{{ post.title }}</h1>
+                    
+                    <p class="text-muted small mb-4">
+                        发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        {% if post.updated_at and post.updated_at != post.created_at %}
+                        · 更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        {% endif %}
+                    </p>
+                    
+                    <div class="card-text mb-4" style="white-space: pre-wrap;">{{ post.content }}</div>
+                    
+                    {% if post.attachments %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            附件
+                        </div>
+                        <div class="list-group list-group-flush">
+                            {% for attachment in post.attachments %}
+                            <a href="{{ url_for('main.download_attachment', filename=attachment.stored_filename) }}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                {{ attachment.filename }}
+                                <span class="badge bg-primary rounded-pill">{{ attachment.file_size }} KB</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> 返回首页
+                    </a>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+{% endblock %} 

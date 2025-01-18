@@ -1,14 +1,14 @@
 {% extends "main/base.html" %}
 
-{% block title %}留言板{% endblock %}
+{% block title %}留言&反馈{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>留言板</h2>
+    <h2>留言&反馈</h2>
     <form action="{{ url_for('main.preview_message') }}" method="post" enctype="multipart/form-data">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
-            <label for="content">留言内容</label>
+            <label for="content">内容（必填）</label>
             <textarea class="form-control" id="content" name="content" rows="5" maxlength="{{ site_config.max_message_length }}" required></textarea>
             <small class="form-text text-muted">
                 还可以输入 <span id="remainingChars">{{ site_config.max_message_length }}</span> 个字符
@@ -16,13 +16,13 @@
         </div>
         
         <div class="form-group">
-            <label for="contact">联系方式（选填）</label>
-            <input type="text" class="form-control" id="contact" name="contact" placeholder="邮箱、QQ或其他联系方式">
+            <label for="contact">怎么称呼您（选填）</label>
+            <input type="text" class="form-control" id="contact" name="contact" placeholder="如果是反馈，可以留下联系方式，不填就默认匿名留言了">
         </div>
         
         <div class="form-check mb-3">
             <input type="checkbox" class="form-check-input" id="allow_public" name="allow_public" value="true" checked>
-            <label class="form-check-label" for="allow_public">允许公开</label>
+            <label class="form-check-label" for="allow_public">允许公开（默认不公开，若您允许公开留言，在网站作者将这条留言设置成公开状态后，有可能会显示在留言弹幕中。）</label>
         </div>
         
         <button type="submit" class="btn btn-primary">预览</button>

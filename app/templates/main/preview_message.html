@@ -1,21 +1,27 @@
 {% extends "main/base.html" %}
 
-{% block title %}预览留言{% endblock %}
+{% block title %}预览留言&反馈{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2>预览留言</h2>
+    <h2>预览留言&反馈</h2>
     <div class="card mb-4">
         <div class="card-body">
-            <h5 class="card-title">留言内容</h5>
+            <h5 class="card-title">内容</h5>
             <p class="card-text" style="white-space: pre-wrap;">{{ message.content }}</p>
             
-            <h5 class="card-title">联系方式</h5>
+            <h5 class="card-title">您的名字&联系方式</h5>
             <p class="card-text">{{ message.contact or '匿名' }}</p>
             
             <h5 class="card-title">是否允许公开</h5>
             <p class="card-text">{{ '是' if message.allow_public else '否' }}</p>
         </div>
+    </div>
+
+    <!-- 添加提示文本 -->
+    <div id="danmaku-tip" class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+        <i class="bi bi-info-circle"></i>友情提醒：每个人提交的留言数量有限制，记得文明发言哦。
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
     <form action="{{ url_for('main.submit_message') }}" method="post">

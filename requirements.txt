@@ -19,8 +19,8 @@ python-dotenv==1.0.0
 pytz==2024.2
 Werkzeug==2.2.3
 WTForms==3.0.1
-Flask-Limiter==3.5.0
-limits[mongodb]==3.5.0
+Flask-Limiter==2.8.1
+limits==2.8.0
 
 # Optional packages (Linux/Unix only)
 uWSGI==2.0.28

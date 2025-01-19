@@ -41,9 +41,11 @@
                         <a href="{{ url_for('main.post', post_id=post.id) }}" class="text-decoration-none">{{ post.title }}</a>
                     </h2>
                     <p class="card-text text-muted small">
+                        {% if post.local_updated_at == post.local_created_at %}
                         发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        {% endif %}
                         {% if post.local_updated_at != post.local_created_at %}
-                        · 更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
                         {% endif %}
                     </p>
                     <p class="card-text">{{ post.content[:(site_config.content_preview_length|int)] }}...</p>

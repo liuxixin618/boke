@@ -17,7 +17,8 @@
                     <p class="text-muted small mb-4">
                         发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}
                         {% if post.updated_at and post.updated_at != post.created_at %}
-                        · 更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
+                        </br>
+                        更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
                         {% endif %}
                     </p>
                     

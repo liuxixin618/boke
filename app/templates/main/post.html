@@ -41,7 +41,7 @@
                     </div>
                     {% endif %}
                     
-                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary">
+                    <a href="{{ url_for('main.index', page=request.args.get('from_page', 1)) }}" class="btn btn-outline-primary">
                         <i class="bi bi-arrow-left"></i> 返回首页
                     </a>
                 </div>

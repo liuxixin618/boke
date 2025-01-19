@@ -42,7 +42,7 @@
                     </h2>
                     <p class="card-text text-muted small">
                         发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}
-                        {% if post.updated_at and post.updated_at != post.created_at %}
+                        {% if post.local_updated_at != post.local_created_at %}
                         · 更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
                         {% endif %}
                     </p>

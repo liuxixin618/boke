@@ -268,18 +268,18 @@ def submit_message():
             for ip in ips:
                 if is_valid_ipv4(ip):
                     return ip
-            return ips[0]  # 如果没有IPv4地址，返回第一个地址
+            return None  # 如果没有找到有效的IPv4地址，返回None
 
-        # 优先从 X-Forwarded-For 获取
-        if 'X-Forwarded-For' in request.headers:
-            ip = get_first_ipv4(request.headers['X-Forwarded-For'])
-            if ip:
-                return ip
-
-        # 其次从 X-Real-IP 获取
+        # 优先从 X-Real-IP 获取（Nginx 配置）
         if 'X-Real-IP' in request.headers:
             ip = request.headers['X-Real-IP'].strip()
             if is_valid_ipv4(ip):
+                return ip
+
+        # 其次从 X-Forwarded-For 获取
+        if 'X-Forwarded-For' in request.headers:
+            ip = get_first_ipv4(request.headers['X-Forwarded-For'])
+            if ip:
                 return ip
 
         # 最后使用远程地址

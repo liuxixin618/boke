@@ -31,8 +31,8 @@
 
 - **后端框架**: Flask
 - **数据库**: MongoDB (使用 MongoEngine ORM)
-- **前端框架**: Bootstrap 5
-- **图标**: Bootstrap Icons
+- **前端框架**: Bootstrap 5.3.0
+- **图标**: Bootstrap Icons 1.10.0
 - **安全性**:
   - Flask-Login 用户认证
   - CSRF 保护
@@ -77,7 +77,16 @@ venv\Scripts\activate     # Windows
 pip install -r requirements.txt
 ```
 
-4. 设置环境变量
+4. 下载静态资源
+```bash
+# 安装 requests 库（如果尚未安装）
+pip install requests
+
+# 运行下载脚本
+python download_static.py
+```
+
+5. 设置环境变量
 ```bash
 # Linux/Mac
 export FLASK_APP=app
@@ -88,7 +97,7 @@ set FLASK_APP=app
 set FLASK_ENV=development
 ```
 
-5. 运行应用
+6. 运行应用
 ```bash
 flask run
 ```

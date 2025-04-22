@@ -11,6 +11,7 @@
             <thead>
                 <tr>
                     <th>联系方式</th>
+                    <th>留言内容</th>
                     <th>留言时间</th>
                     <th>允许公开</th>
                     <th>公开状态</th>
@@ -24,6 +25,7 @@
                 {% for message in pagination.items %}
                 <tr>
                     <td>{{ message.contact or '匿名' }}</td>
+                    <td title="{{ message.content }}">{{ message.content|truncate(50) }}</td>
                     <td>{{ moment(message.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}</td>
                     <td>
                         <span class="badge {% if message.allow_public %}bg-success{% else %}bg-secondary{% endif %}">
@@ -81,4 +83,4 @@ function deleteMessage(messageId) {
     }
 }
 </script>
-{% endblock %} 
+{% endblock %}

@@ -48,7 +48,14 @@
                     </div>
                     {% endif %}
                     
-                    <a href="{{ url_for('main.index', page=request.args.get('from_page', 1)) }}" class="btn btn-outline-primary">
+                    {% set back_params = {'page': request.args.get('from_page', 1)} %}
+                    {% if request.args.get('search') %}
+                      {% set _ = back_params.update({'search': request.args.get('search')}) %}
+                    {% endif %}
+                    {% if request.args.get('category') %}
+                      {% set _ = back_params.update({'category': request.args.get('category')}) %}
+                    {% endif %}
+                    <a href="{{ url_for('main.index', **back_params) }}" class="btn btn-outline-primary">
                         <i class="bi bi-arrow-left"></i> 返回首页
                     </a>
                 </div>

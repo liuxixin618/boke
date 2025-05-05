@@ -308,3 +308,17 @@ class Cache(db.Document):
             {'fields': ['created_at'], 'expireAfterSeconds': 3600}  # 1小时后自动过期
         ]
     } 
+
+class SiteShare(db.Document):
+    """好站分享模型"""
+    name = db.StringField(required=True)         # 网站名
+    url = db.StringField(required=True)          # 跳转链接
+    is_visible = db.BooleanField(default=True)   # 是否显示
+    is_pinned = db.BooleanField(default=False)   # 是否置顶
+    created_at = db.DateTimeField(default=get_utc_time)
+
+    meta = {
+        'collection': 'site_share',
+        'ordering': ['-is_pinned', '-created_at'],
+        'indexes': ['name', 'is_visible', 'is_pinned']
+    } 

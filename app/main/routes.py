@@ -6,7 +6,7 @@
 
 from flask import render_template, redirect, url_for, flash, request, send_file, current_app, send_from_directory, abort, jsonify
 from . import main
-from ..models import Post, SiteConfig, Message, IPRecord, Category
+from ..models import Post, SiteConfig, Message, IPRecord, Category, SiteShare
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id, escape_regex_pattern
 from ..utils.cache import cache_for
 import os
@@ -126,12 +126,13 @@ def index():
                          categories=categories,
                          selected_category=category_id)
 
-@main.route('/goods')
+@main.route('/siteshare')
 @cache_for(duration=600)  # 10分钟缓存
-def goods():
-    """好物分享页面"""
-    current_app.logger.info("访问好物分享页面")
-    return render_template('main/goods.html')
+def siteshare():
+    """好站分享页面"""
+    current_app.logger.info("访问好站分享页面")
+    sites = SiteShare.objects(is_visible=True).order_by('-is_pinned', '-created_at')
+    return render_template('main/siteshare.html', sites=sites)
 
 @main.route('/about')
 @cache_for(duration=600)  # 10分钟缓存

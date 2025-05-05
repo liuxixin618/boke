@@ -88,6 +88,11 @@
                             <i class="bi bi-journal-text"></i> Nginx日志
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.siteshare_list' %}active{% endif %}" href="{{ url_for('admin.siteshare_list') }}">
+                            <i class="bi bi-link-45deg"></i> 好站分享
+                        </a>
+                    </li>
                 </ul>
                 
                 <div class="navbar-nav">

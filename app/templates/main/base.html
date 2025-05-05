@@ -193,10 +193,10 @@
                     </li>
                     {% endif %}
                     
-                    {% if site_config.nav_goods_visible %}
+                    {% if site_config.nav_siteshare_visible %}
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.goods' %}active{% endif %}" href="{{ url_for('main.goods') }}">
-                            {{ site_config.nav_goods_text }}
+                        <a class="nav-link {% if request.endpoint == 'main.siteshare' %}active{% endif %}" href="{{ url_for('main.siteshare') }}">
+                            {{ site_config.nav_siteshare_text }}
                         </a>
                     </li>
                     {% endif %}

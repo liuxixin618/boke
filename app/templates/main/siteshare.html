@@ -1,0 +1,23 @@
+{% extends "main/base.html" %}
+
+{% block title %}好站分享{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-center">好站分享</h2>
+    <div class="row justify-content-center">
+        {% if sites and sites|length > 0 %}
+            {% for s in sites %}
+            <div class="col-12 col-sm-6 col-md-4 col-lg-3 mb-3">
+                <a href="{{ s.url }}" target="_blank" class="btn btn-outline-primary w-100 py-2 fs-6 shadow-sm" style="border-radius: 1rem;">
+                    {% if s.is_pinned %}<i class="bi bi-star-fill text-warning me-1"></i>{% endif %}
+                    {{ s.name }}
+                </a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center text-muted">暂无好站分享</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

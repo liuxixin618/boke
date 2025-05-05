@@ -132,15 +132,15 @@ def create_app(config_name='development'):
                     'type': 'bool'
                 },
                 {
-                    'key': 'nav_goods_text',
-                    'value': '好物推荐',
-                    'description': '好物推荐导航文本',
+                    'key': 'nav_siteshare_text',
+                    'value': '好站分享',
+                    'description': '好站分享导航文本',
                     'type': 'str'
                 },
                 {
-                    'key': 'nav_goods_visible',
+                    'key': 'nav_siteshare_visible',
                     'value': 'true',
-                    'description': '是否显示好物推荐导航',
+                    'description': '是否显示好站分享导航',
                     'type': 'bool'
                 },
                 {

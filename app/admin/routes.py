@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
-from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time, Message, IPRecord, Category
+from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time, Message, IPRecord, Category, SiteShare
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -867,4 +867,68 @@ def view_nginx_logs():
             error_content = ''.join(error_lines)
     except Exception as e:
         error_content = f'无法读取 error.log: {e}'
-    return render_template('admin/nginx_logs.html', access_content=access_content, error_content=error_content) 
+    return render_template('admin/nginx_logs.html', access_content=access_content, error_content=error_content)
+
+@admin.route('/siteshare')
+@login_required
+def siteshare_list():
+    sites = SiteShare.objects.order_by('-is_pinned', '-created_at')
+    return render_template('admin/siteshare_list.html', sites=sites)
+
+@admin.route('/siteshare/new', methods=['GET', 'POST'])
+@login_required
+def siteshare_new():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        url = request.form.get('url', '').strip()
+        is_visible = bool(request.form.get('is_visible'))
+        is_pinned = bool(request.form.get('is_pinned'))
+        if not name or not url:
+            flash('名称和链接不能为空', 'danger')
+            return render_template('admin/edit_siteshare.html', site=None)
+        site = SiteShare(name=name, url=url, is_visible=is_visible, is_pinned=is_pinned)
+        site.save()
+        flash('好站已添加', 'success')
+        return redirect(url_for('admin.siteshare_list'))
+    return render_template('admin/edit_siteshare.html', site=None)
+
+@admin.route('/siteshare/edit/<site_id>', methods=['GET', 'POST'])
+@login_required
+def siteshare_edit(site_id):
+    site = SiteShare.objects(id=site_id).first_or_404()
+    if request.method == 'POST':
+        site.name = request.form.get('name', '').strip()
+        site.url = request.form.get('url', '').strip()
+        site.is_visible = bool(request.form.get('is_visible'))
+        site.is_pinned = bool(request.form.get('is_pinned'))
+        if not site.name or not site.url:
+            flash('名称和链接不能为空', 'danger')
+            return render_template('admin/edit_siteshare.html', site=site)
+        site.save()
+        flash('好站已更新', 'success')
+        return redirect(url_for('admin.siteshare_list'))
+    return render_template('admin/edit_siteshare.html', site=site)
+
+@admin.route('/siteshare/delete/<site_id>', methods=['POST'])
+@login_required
+def siteshare_delete(site_id):
+    site = SiteShare.objects(id=site_id).first_or_404()
+    site.delete()
+    flash('好站已删除', 'success')
+    return redirect(url_for('admin.siteshare_list'))
+
+@admin.route('/siteshare/toggle_pin/<site_id>', methods=['POST'])
+@login_required
+def siteshare_toggle_pin(site_id):
+    site = SiteShare.objects(id=site_id).first_or_404()
+    site.is_pinned = not site.is_pinned
+    site.save()
+    return redirect(url_for('admin.siteshare_list'))
+
+@admin.route('/siteshare/toggle_visible/<site_id>', methods=['POST'])
+@login_required
+def siteshare_toggle_visible(site_id):
+    site = SiteShare.objects(id=site_id).first_or_404()
+    site.is_visible = not site.is_visible
+    site.save()
+    return redirect(url_for('admin.siteshare_list')) 

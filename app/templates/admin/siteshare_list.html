@@ -1,0 +1,52 @@
+{% extends "admin/base.html" %}
+{% block title %}好站分享管理{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>好站分享管理</h2>
+    <a href="{{ url_for('admin.siteshare_new') }}" class="btn btn-success mb-3">新增好站</a>
+    <table class="table table-bordered table-hover">
+        <thead>
+            <tr>
+                <th>名称</th>
+                <th>链接</th>
+                <th>是否显示</th>
+                <th>是否置顶</th>
+                <th>创建时间</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in sites %}
+            <tr>
+                <td>{{ s.name }}</td>
+                <td><a href="{{ s.url }}" target="_blank">{{ s.url }}</a></td>
+                <td>
+                    <form action="{{ url_for('admin.siteshare_toggle_visible', site_id=s.id) }}" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm {% if s.is_visible %}btn-success{% else %}btn-secondary{% endif %}">
+                            {% if s.is_visible %}显示{% else %}隐藏{% endif %}
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <form action="{{ url_for('admin.siteshare_toggle_pin', site_id=s.id) }}" method="post" style="display:inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm {% if s.is_pinned %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                            {% if s.is_pinned %}已置顶{% else %}置顶{% endif %}
+                        </button>
+                    </form>
+                </td>
+                <td>{{ s.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>
+                    <a href="{{ url_for('admin.siteshare_edit', site_id=s.id) }}" class="btn btn-primary btn-sm">编辑</a>
+                    <form action="{{ url_for('admin.siteshare_delete', site_id=s.id) }}" method="post" style="display:inline;" onsubmit="return confirm('确定要删除该好站吗？');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

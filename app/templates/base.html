@@ -38,6 +38,12 @@
                         <a class="nav-link" href="{{ url_for('main.about') }}">{{ site_config.nav_about_text }}</a>
                     </li>
                     {% endif %}
+                    
+                    {% if site_config.nav_siteshare_visible %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('main.siteshare') }}">{{ site_config.nav_siteshare_text }}</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

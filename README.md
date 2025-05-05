@@ -1,131 +1,178 @@
-# Flask Blog System
+# Flask 博客系统
 
-一个基于 Flask 和 MongoDB 的博客系统，支持文章管理、留言管理和文件上传等功能。
+一个基于 **Flask + MongoDB** 的现代化博客系统，支持文章管理、分类、多附件上传、富文本编辑、留言、好站分享、系统日志可视化、动态公告、移动端自适应等功能。前端采用 Bootstrap 5，支持 Markdown 格式内容展示。
+
+---
 
 ## 主要功能
 
-### 文章管理
-- 创建、编辑、删除文章
-- 文章分类管理
-- 文章置顶功能
-- 文章可见性控制
-- 附件上传和管理
-  - 支持多文件上传
-  - 文件安全存储
-  - 文件下载和删除
+### 文章与分类
+- 文章的创建、编辑、删除、置顶、可见性控制
+- 支持多分类（文章可属于多个分类）
+- 分类的增删改查
+- 富文本编辑（CKEditor 5，支持图片/视频上传）
+- 附件上传与管理
 
 ### 留言系统
-- 访客留言功能
-- 留言管理（查看、删除）
-- 留言公开/私密设置
-- IP 地址记录和管理
-- 防垃圾留言措施
+- 访客留言、弹幕展示
+- 留言管理、删除、公开/私密切换
+- IP 记录与限制，防刷机制
 
-### 管理员功能
-- 管理员登录系统
-- 密码修改
-- 网站设置管理
-- 仪表盘数据统计
+### 好站分享
+- "好站分享"模块，支持增删改查、置顶、显示/隐藏
+- 前台页面美观展示，置顶项有星标
+- 后台管理入口
+
+### 公告与关于作者
+- 公告弹窗，内容支持 Markdown，静态文件管理
+- "关于作者"页面，内容通过 Markdown 文件自定义，支持格式化展示
+
+### 网站设置与导航
+- 后台可配置导航栏各项显示与名称
+- 所有导航项支持自定义顺序、显示与文本
+
+### 日志与监控
+- 后台可视化系统日志、Nginx 日志
+- 支持日志滚动查看
+
+### 其它
+- 支持移动端自适应
+- 全站缓存优化，缓存 key 合理
+- 兼容 Windows 开发与 Linux 部署
+
+---
 
 ## 技术栈
 
-- **后端框架**: Flask
-- **数据库**: MongoDB (使用 MongoEngine ORM)
-- **前端框架**: Bootstrap 5.3.0
-- **图标**: Bootstrap Icons 1.10.0
-- **安全性**:
-  - Flask-Login 用户认证
-  - CSRF 保护
-  - 文件上传安全处理
-  - XSS 防护
+- **后端**：Flask 2.2.5、Flask-MongoEngine、Flask-Login、Flask-WTF、Flask-Limiter
+- **数据库**：MongoDB 4.0+（推荐 4.2+）
+- **前端**：Bootstrap 5.3.0、Bootstrap Icons、markdown-it、CKEditor 5
+- **依赖管理**：requirements.txt
+- **日志**：RotatingFileHandler，支持日志文件分割
 
-## 项目结构
+---
+
+## 目录结构
 
 ```
-app/
-├── admin/             # 管理后台模块
-├── main/             # 前台页面模块
-├── models/           # 数据模型
-├── static/           # 静态文件
-├── templates/        # 模板文件
-└── utils/            # 工具函数
+boke/
+├── app/
+│   ├── admin/           # 后台管理蓝图
+│   ├── main/            # 前台主站蓝图
+│   ├── models.py        # 数据模型
+│   ├── constants.py     # 全局常量（如版本号）
+│   ├── static/          # 静态资源（css/js/file/等）
+│   │   └── file/
+│   │       ├── Version_Announcement.md   # 公告内容
+│   │       └── About_author.md           # 关于作者内容
+│   ├── templates/       # Jinja2 模板
+│   └── utils/           # 工具函数
+├── uploads/             # 上传文件存储
+├── logs/                # 日志文件
+├── requirements.txt     # 依赖包
+├── run.py / wsgi.py     # 启动入口
+├── download_static.py   # 静态资源下载脚本
+├── init_siteshare_nav_config.py # 初始化好站分享配置
+└── README.md
 ```
 
-## 环境要求
+---
 
-- Python 3.8+
-- MongoDB 4.0+
-- pip (Python 包管理器)
+## 快速开始
 
-## 安装和运行
+1. **克隆项目并进入目录**
+   ```bash
+   git clone <repository-url>
+   cd <project-directory>
+   ```
 
-1. 克隆项目并进入项目目录
-```bash
-git clone <repository-url>
-cd <project-directory>
-```
+2. **创建并激活虚拟环境**
+   ```bash
+   python -m venv venv
+   # Windows
+   venv\Scripts\activate
+   # Linux/Mac
+   source venv/bin/activate
+   ```
 
-2. 创建并激活虚拟环境
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
+3. **安装依赖**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-3. 安装依赖
-```bash
-pip install -r requirements.txt
-```
+4. **下载静态资源**
+   ```bash
+   python download_static.py
+   ```
 
-4. 下载静态资源
-```bash
-# 安装 requests 库（如果尚未安装）
-pip install requests
+5. **初始化好站分享导航配置（如首次部署）**
+   ```bash
+   python init_siteshare_nav_config.py
+   ```
 
-# 运行下载脚本
-python download_static.py
-```
+6. **配置环境变量（可用 .env 文件）**
+   ```
+   MONGODB_URI=mongodb://localhost:27017/blog
+   SECRET_KEY=your-secret-key
+   FLASK_ENV=development
+   ```
 
-5. 设置环境变量
-```bash
-# Linux/Mac
-export FLASK_APP=app
-export FLASK_ENV=development
+7. **运行项目**
+   ```bash
+   flask run
+   # 或
+   python run.py
+   ```
 
-# Windows
-set FLASK_APP=app
-set FLASK_ENV=development
-```
+---
 
-6. 运行应用
-```bash
-flask run
-```
+## 生产部署
 
-## 配置说明
+- 推荐使用 Gunicorn + Nginx，详见 `deployment_guide.md`
+- 支持 Systemd 服务管理、Nginx 静态资源代理
+- 日志、数据库备份、权限等安全建议详见部署文档
 
-主要配置项在 `.env` 文件中：
+---
 
-```env
-MONGODB_URI=mongodb://localhost:27017/blog
-SECRET_KEY=your-secret-key
-UPLOAD_FOLDER=uploads
-```
+## 配置与自定义
 
-## 安全注意事项
+- **全局常量**：`app/constants.py` 统一管理（如版本号）
+- **公告内容**：`app/static/file/Version_Announcement.md`，支持 Markdown
+- **关于作者**：`app/static/file/About_author.md`，支持 Markdown
+- **导航栏**：后台"网站设置"可自定义显示与文本
+- **好站分享**：后台管理，前台 `/siteshare` 展示
 
-1. 确保修改默认的 SECRET_KEY
-2. 定期备份数据库
-3. 及时更新依赖包
-4. 确保上传目录具有适当的权限设置
+---
 
-## 开发说明
+## 数据库管理
 
-1. 代码风格遵循 PEP 8 规范
-2. 使用 Git Flow 工作流
-3. 提交前进行代码审查
-4. 保持日志记录的完整性
+- MongoDB 数据结构详见 `mongo.txt`
+- 常用命令、备份恢复、数据维护等均有说明
+
+---
+
+## 依赖包
+
+详见 `requirements.txt`，主要依赖包括：
+- Flask、Flask-Login、Flask-MongoEngine、Flask-WTF、Flask-Limiter
+- mongoengine、pymongo、python-dotenv、gunicorn 等
+
+---
+
+## 安全建议
+
+- 修改默认 SECRET_KEY
+- 数据库账号密码安全
+- 上传目录权限控制
+- 定期备份数据库
+- 及时更新依赖
+
+---
 
 ## 许可证
 
 MIT License
+
+---
+
+如需更多帮助或功能扩展，欢迎提 issue 或联系作者！

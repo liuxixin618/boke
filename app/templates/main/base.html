@@ -232,7 +232,7 @@
                     {% endif %}
                 </div>
                 <div class="footer-version pe-2" style="position:absolute;right:0;">
-                    版本号：{{ version or '获取失败' }}
+                    <a href="#" id="version-announcement-link" class="text-decoration-underline" style="color:var(--text-color);">版本号：{{ version or '获取失败' }}</a>
                 </div>
             </div>
             <!-- 小屏布局：备案信息和版本号上下堆叠 -->
@@ -249,20 +249,59 @@
                 </p>
                 {% endif %}
                 <div class="footer-version mt-1">
-                    版本号：{{ version or '获取失败' }}
+                    <a href="#" id="version-announcement-link-mobile" class="text-decoration-underline" style="color:var(--text-color);">版本号：{{ version or '获取失败' }}</a>
                 </div>
             </div>
         </div>
     </footer>
 
+    <!-- 版本公告模态框 -->
+    <div class="modal fade" id="versionAnnouncementModal" tabindex="-1" aria-labelledby="versionAnnouncementModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="versionAnnouncementModalLabel">版本公告</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="关闭"></button>
+          </div>
+          <div class="modal-body">
+            <div id="version-announcement-content" class="markdown-body">加载中...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 使用本地静态资源 -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    <!-- 引入 markdown-it CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
     <script>
         // 页面加载完成后移除加载动画
         window.addEventListener('load', function() {
             document.querySelector('.loading-spinner').classList.add('hidden');
             document.body.classList.add('loaded');
         });
+
+        // 版本号点击事件，弹出公告模态框
+        function showVersionAnnouncement() {
+            var modal = new bootstrap.Modal(document.getElementById('versionAnnouncementModal'));
+            var contentDiv = document.getElementById('version-announcement-content');
+            contentDiv.innerHTML = '加载中...';
+            fetch('/version_announcement').then(res => res.json()).then(data => {
+                if(data.success) {
+                    var md = window.markdownit({html:true,linkify:true,breaks:true});
+                    contentDiv.innerHTML = md.render(data.content);
+                } else {
+                    contentDiv.innerHTML = '<span class="text-danger">公告加载失败：' + (data.error || '未知错误') + '</span>';
+                }
+            }).catch(() => {
+                contentDiv.innerHTML = '<span class="text-danger">公告加载失败</span>';
+            });
+            modal.show();
+        }
+        document.getElementById('version-announcement-link').addEventListener('click', function(e){e.preventDefault();showVersionAnnouncement();});
+        var mobileLink = document.getElementById('version-announcement-link-mobile');
+        if(mobileLink) mobileLink.addEventListener('click', function(e){e.preventDefault();showVersionAnnouncement();});
     </script>
 </body>
 </html> 

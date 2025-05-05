@@ -4,7 +4,7 @@
 包含所有前台页面的路由处理函数，如首页、文章详情页等
 """
 
-from flask import render_template, redirect, url_for, flash, request, send_file, current_app, send_from_directory, abort
+from flask import render_template, redirect, url_for, flash, request, send_file, current_app, send_from_directory, abort, jsonify
 from . import main
 from ..models import Post, SiteConfig, Message, IPRecord
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id, escape_regex_pattern
@@ -403,6 +403,18 @@ def messages_show():
     } for msg in messages]
     
     return render_template('main/messages_show.html', messages=messages_list) 
+
+@main.route('/version_announcement')
+def version_announcement():
+    """返回版本公告md内容"""
+    import os
+    md_path = os.path.join(current_app.static_folder, 'file', 'Version_Announcement.md')
+    try:
+        with open(md_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return jsonify({"success": True, "content": content})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 @main.app_context_processor
 def inject_version():

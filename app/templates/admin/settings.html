@@ -64,6 +64,16 @@
                     <label class="form-check-label" for="nav_about_visible">显示关于导航</label>
                 </div>
             </div>
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label for="nav_goods_text">好物推荐导航文本</label>
+                    <input type="text" class="form-control" id="nav_goods_text" name="nav_goods_text" value="{{ site_config.nav_goods_text }}" required>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="nav_goods_visible" name="nav_goods_visible" {% if site_config.nav_goods_visible %}checked{% endif %}>
+                    <label class="form-check-label" for="nav_goods_visible">显示好物推荐导航</label>
+                </div>
+            </div>
         </div>
         
         <h4 class="mt-4">留言设置</h4>

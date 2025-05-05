@@ -193,6 +193,14 @@
                     </li>
                     {% endif %}
                     
+                    {% if site_config.nav_goods_visible %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'main.goods' %}active{% endif %}" href="{{ url_for('main.goods') }}">
+                            {{ site_config.nav_goods_text }}
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     {% if site_config.nav_message_visible %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'main.messages_show' %}active{% endif %}" href="{{ url_for('main.messages_show') }}">

@@ -132,6 +132,18 @@ def create_app(config_name='development'):
                     'type': 'bool'
                 },
                 {
+                    'key': 'nav_goods_text',
+                    'value': '好物推荐',
+                    'description': '好物推荐导航文本',
+                    'type': 'str'
+                },
+                {
+                    'key': 'nav_goods_visible',
+                    'value': 'true',
+                    'description': '是否显示好物推荐导航',
+                    'type': 'bool'
+                },
+                {
                     'key': 'max_message_length',
                     'value': '500',
                     'description': '留言内容最大长度',

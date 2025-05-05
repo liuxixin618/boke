@@ -77,11 +77,26 @@ class Admin(db.Document, UserMixin):
         current_app.logger.info(f"保存管理员信息: {self.username}")
         return super(Admin, self).save(*args, **kwargs)
 
+class Category(db.Document):
+    """分类模型"""
+    name = db.StringField(required=True, unique=True)
+    description = db.StringField()
+    created_at = db.DateTimeField(default=get_utc_time)
+
+    meta = {
+        'collection': 'category',
+        'ordering': ['-created_at'],
+        'indexes': ['name']
+    }
+
+    def __str__(self):
+        return self.name
+
 class Post(db.Document):
     """文章模型"""
     title = db.StringField(required=True)
     content = db.StringField(required=True)
-    category = db.StringField()
+    categories = db.ListField(db.ReferenceField('Category'))
     created_at = db.DateTimeField(default=get_utc_time)
     updated_at = db.DateTimeField(default=get_utc_time)
     is_visible = db.BooleanField(default=True)
@@ -93,7 +108,7 @@ class Post(db.Document):
         'ordering': ['-is_pinned', '-updated_at', '-created_at'],
         'indexes': [
             'title',
-            'category',
+            'categories',
             'created_at',
             'updated_at',
             'is_visible',

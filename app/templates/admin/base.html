@@ -54,6 +54,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.category_list' %}active{% endif %}" href="{{ url_for('admin.category_list') }}">
+                            <i class="bi bi-tags"></i> 分类管理
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.endpoint == 'admin.messages' %}active{% endif %}" href="{{ url_for('admin.messages') }}">
                             <i class="bi bi-chat-dots"></i> 留言管理
                         </a>

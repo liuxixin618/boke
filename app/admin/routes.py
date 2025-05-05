@@ -9,7 +9,7 @@ from flask import render_template, redirect, url_for, request, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from . import admin
-from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time, Message, IPRecord
+from ..models import Admin, Post, SiteConfig, get_utc_time, convert_to_local_time, Message, IPRecord, Category
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id
 from datetime import datetime, timezone, timedelta
 import uuid
@@ -250,31 +250,26 @@ def dashboard():
 @login_required
 def new_post():
     """创建新文章"""
+    categories = Category.objects.order_by('-created_at')
     if request.method == 'POST':
         title = sanitize_string(request.form.get('title'))
         content = sanitize_string(request.form.get('content'))
-        category = sanitize_string(request.form.get('category'))
-        
+        category_ids = request.form.getlist('categories')
+        selected_categories = Category.objects(id__in=category_ids)
         current_app.logger.info(f"开始创建新文章: {title}")
-        
         if not title or not content:
             current_app.logger.warning("创建文章失败：标题或内容为空")
             flash('标题和内容不能为空')
-            return render_template('admin/edit_post.html')
-        
-        # 创建文章，默认可见
+            return render_template('admin/edit_post.html', categories=categories)
         post = Post(
             title=title,
             content=content,
-            category=category,
-            is_visible=True,  # 默认可见
+            categories=list(selected_categories),
+            is_visible=True,
             updated_at=get_utc_time()
         )
-        
-        # 处理附件
         files = request.files.getlist('attachments')
         current_app.logger.info(f"处理文章附件，共 {len(files)} 个文件")
-        
         attachments = []
         for file in files:
             current_app.logger.info(f"处理附件: {file.filename}")
@@ -282,15 +277,13 @@ def new_post():
             if file_info:
                 attachments.append(file_info)
                 current_app.logger.info(f"附件保存成功: {file_info}")
-        
         if attachments:
             post.attachments = attachments
-        
         post.save()
         current_app.logger.info(f"文章创建成功，ID: {post.id}")
         flash('文章已创建')
         return redirect(url_for('admin.dashboard'))
-    return render_template('admin/edit_post.html')
+    return render_template('admin/edit_post.html', categories=categories)
 
 @admin.route('/post/edit/<post_id>', methods=['GET', 'POST'])
 @login_required
@@ -307,6 +300,7 @@ def edit_post(post_id):
     try:
         current_app.logger.info(f"开始编辑文章，ID: {post_id}")
         post = Post.objects.get_or_404(id=validate_object_id(post_id))
+        categories = Category.objects.order_by('-created_at')
         current_app.logger.info(f"找到文章: {post.title}")
         
         if request.method == 'POST':
@@ -315,12 +309,13 @@ def edit_post(post_id):
             # 清理并验证输入
             title = sanitize_string(request.form.get('title'))
             content = sanitize_string(request.form.get('content'))
-            category = sanitize_string(request.form.get('category'))
+            category_ids = request.form.getlist('categories')
+            selected_categories = Category.objects(id__in=category_ids)
             
             if not title or not content:
                 current_app.logger.warning("更新文章失败：标题或内容为空")
                 flash('标题和内容不能为空')
-                return render_template('admin/edit_post.html', post=post)
+                return render_template('admin/edit_post.html', post=post, categories=categories)
             
             # 记录字段变更
             if post.title != title:
@@ -328,10 +323,10 @@ def edit_post(post_id):
                 has_changes = True
                 post.title = title
                 
-            if post.category != category:
-                current_app.logger.info(f"文章分类更新: {post.category} -> {category}")
+            if set(post.categories) != set(selected_categories):
+                current_app.logger.info(f"文章分类更新: {post.categories} -> {list(selected_categories)}")
                 has_changes = True
-                post.category = category
+                post.categories = list(selected_categories)
                 
             if post.content != content:
                 current_app.logger.info("文章内容已更新")
@@ -375,7 +370,7 @@ def edit_post(post_id):
                 current_app.logger.info("文章无变更")
             return redirect(url_for('admin.dashboard'))
         
-        return render_template('admin/edit_post.html', post=post)
+        return render_template('admin/edit_post.html', post=post, categories=categories)
         
     except Exception as e:
         current_app.logger.error(f"编辑文章出错，ID: {post_id}, 错误: {str(e)}")
@@ -775,4 +770,64 @@ def ip_records():
         page=page, per_page=per_page
     )
     
-    return render_template('admin/ip_records.html', pagination=pagination) 
+    return render_template('admin/ip_records.html', pagination=pagination)
+
+@admin.route('/categories')
+@login_required
+def category_list():
+    """分类列表"""
+    categories = Category.objects.order_by('-created_at')
+    return render_template('admin/category_list.html', categories=categories)
+
+@admin.route('/category/new', methods=['GET', 'POST'])
+@login_required
+def category_new():
+    """新增分类"""
+    if request.method == 'POST':
+        name = sanitize_string(request.form.get('name'))
+        description = sanitize_string(request.form.get('description'))
+        if not name:
+            flash('分类名称不能为空')
+            return render_template('admin/edit_category.html')
+        if Category.objects(name=name).first():
+            flash('分类名称已存在')
+            return render_template('admin/edit_category.html')
+        category = Category(name=name, description=description)
+        category.save()
+        flash('分类已创建')
+        return redirect(url_for('admin.category_list'))
+    return render_template('admin/edit_category.html')
+
+@admin.route('/category/edit/<category_id>', methods=['GET', 'POST'])
+@login_required
+def category_edit(category_id):
+    """编辑分类"""
+    category = Category.objects(id=category_id).first_or_404()
+    if request.method == 'POST':
+        name = sanitize_string(request.form.get('name'))
+        description = sanitize_string(request.form.get('description'))
+        if not name:
+            flash('分类名称不能为空')
+            return render_template('admin/edit_category.html', category=category)
+        if Category.objects(name=name, id__ne=category.id).first():
+            flash('分类名称已存在')
+            return render_template('admin/edit_category.html', category=category)
+        category.name = name
+        category.description = description
+        category.save()
+        flash('分类已更新')
+        return redirect(url_for('admin.category_list'))
+    return render_template('admin/edit_category.html', category=category)
+
+@admin.route('/category/delete/<category_id>', methods=['POST'])
+@login_required
+def category_delete(category_id):
+    """删除分类"""
+    category = Category.objects(id=category_id).first_or_404()
+    # 检查是否有文章引用该分类
+    if Post.objects(categories=category).first():
+        flash('有文章引用该分类，无法删除')
+        return redirect(url_for('admin.category_list'))
+    category.delete()
+    flash('分类已删除')
+    return redirect(url_for('admin.category_list')) 

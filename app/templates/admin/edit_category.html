@@ -1,0 +1,30 @@
+{% extends "admin/base.html" %}
+{% block title %}{% if category %}编辑分类{% else %}新增分类{% endif %}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">{% if category %}编辑分类{% else %}新增分类{% endif %}</h2>
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">分类名称</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ category.name if category else '' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">描述</label>
+                            <textarea class="form-control" id="description" name="description" rows="3">{{ category.description if category else '' }}</textarea>
+                        </div>
+                        <div class="text-end">
+                            <a href="{{ url_for('admin.category_list') }}" class="btn btn-secondary">返回</a>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

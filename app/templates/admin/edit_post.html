@@ -23,12 +23,13 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label for="category" class="form-label">分类</label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="category" 
-                                   name="category" 
-                                   value="{{ post.category if post else '' }}">
+                            <label for="categories" class="form-label">分类</label>
+                            <select class="form-select" id="categories" name="categories" multiple required>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}" {% if post and cat in post.categories %}selected{% endif %}>{{ cat.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">按住Ctrl或Cmd可多选</div>
                         </div>
                         
                         <div class="mb-3">

@@ -1,0 +1,42 @@
+{% extends "admin/base.html" %}
+{% block title %}分类管理{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">分类管理</h2>
+                    <a href="{{ url_for('admin.category_new') }}" class="btn btn-success mb-3">新增分类</a>
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>描述</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for cat in categories %}
+                            <tr>
+                                <td>{{ cat.name }}</td>
+                                <td>{{ cat.description or '' }}</td>
+                                <td>{{ cat.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <a href="{{ url_for('admin.category_edit', category_id=cat.id) }}" class="btn btn-primary btn-sm">编辑</a>
+                                    <form action="{{ url_for('admin.category_delete', category_id=cat.id) }}" method="post" style="display:inline;" onsubmit="return confirm('确定要删除该分类吗？');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-danger btn-sm">删除</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

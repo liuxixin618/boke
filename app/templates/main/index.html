@@ -40,6 +40,13 @@
                     <h2 class="card-title h4">
                         <a href="{{ url_for('main.post', post_id=post.id, from_page=request.args.get('page', 1)) }}" class="text-decoration-none">{{ post.title }}</a>
                     </h2>
+                    {% if post.categories and post.categories|length > 0 %}
+                    <div class="mb-2">
+                        {% for cat in post.categories %}
+                        <span class="badge bg-info text-dark me-1">{{ cat.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     <p class="card-text text-muted small">
                         {% if post.local_updated_at == post.local_created_at %}
                         发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}

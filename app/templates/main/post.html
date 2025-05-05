@@ -13,6 +13,13 @@
                     {% endif %}
                     
                     <h1 class="card-title">{{ post.title }}</h1>
+                    {% if post.categories and post.categories|length > 0 %}
+                    <div class="mb-2">
+                        {% for cat in post.categories %}
+                        <span class="badge bg-info text-dark me-1">{{ cat.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                     
                     <p class="text-muted small mb-4">
                         发布于 {{ moment(post.local_created_at).format('YYYY-MM-DD HH:mm:ss') }}

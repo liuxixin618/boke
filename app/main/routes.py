@@ -6,7 +6,7 @@
 
 from flask import render_template, redirect, url_for, flash, request, send_file, current_app, send_from_directory, abort, jsonify
 from . import main
-from ..models import Post, SiteConfig, Message, IPRecord
+from ..models import Post, SiteConfig, Message, IPRecord, Category
 from ..utils.security import sanitize_string, sanitize_mongo_query, validate_object_id, escape_regex_pattern
 from ..utils.cache import cache_for
 import os
@@ -95,6 +95,7 @@ def index():
     page = request.args.get('page', 1, type=int)
     per_page = int(SiteConfig.get_config('posts_per_page', 10))
     search_query = sanitize_string(request.args.get('search', '').strip())
+    category_id = request.args.get('category')
     
     # 构建查询条件
     query = {'is_visible': True}
@@ -102,6 +103,8 @@ def index():
         current_app.logger.info(f"搜索文章，关键词: {search_query}")
         pattern = escape_regex_pattern(search_query)
         query['title'] = {'$regex': pattern, '$options': 'i'}
+    if category_id:
+        query['categories'] = category_id
     
     # 使用清理后的查询条件
     safe_query = sanitize_mongo_query(query)
@@ -114,9 +117,14 @@ def index():
     for config in SiteConfig.objects:
         site_configs[config.key] = config.value
     
+    # 获取所有分类
+    categories = Category.objects.order_by('-created_at')
+    
     return render_template('main/index.html', 
                          posts=posts,
-                         site_config=site_configs)
+                         site_config=site_configs,
+                         categories=categories,
+                         selected_category=category_id)
 
 @main.route('/goods')
 @cache_for(duration=600)  # 10分钟缓存

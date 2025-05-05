@@ -139,6 +139,27 @@
         .footer-version {
             color: var(--text-color) !important;
         }
+        /* 公告弹窗宽度自适应，移动端全宽 */
+        #versionAnnouncementModal .modal-dialog {
+            max-width: 600px;
+            width: auto;
+        }
+        @media (max-width: 576px) {
+            #versionAnnouncementModal .modal-dialog {
+                max-width: 98vw;
+                margin: 0.5rem auto;
+            }
+        }
+        /* 公告内容高度自适应，超出可滚动 */
+        #versionAnnouncementModal .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        @media (max-width: 576px) {
+            #versionAnnouncementModal .modal-body {
+                max-height: 90vh;
+            }
+        }
     </style>
     {{ moment.include_moment() }}
     {{ moment.locale('zh-cn') }}

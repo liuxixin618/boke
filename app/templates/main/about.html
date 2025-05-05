@@ -1,18 +1,49 @@
 {% extends "main/base.html" %}
 
-{% block title %}{{ site_config.nav_about_text }}{% endblock %}
+{% block title %}关于作者{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card shadow-sm">
                 <div class="card-body">
-                    <h2 class="card-title mb-4">{{ site_config.nav_about_text }}</h2>
-                    <p class="card-text">内容建设中...</p>
+                    <h2 class="card-title mb-4 text-center">关于作者</h2>
+                    <div id="about-author-content" class="markdown-body">加载中...</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<!-- markdown-it 渲染脚本 -->
+<script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
+<style>
+.markdown-body {
+    background: #e3f2fd !important; /* Bootstrap 5 主色调淡蓝色 */
+    border-radius: 0.5rem;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    color: #111 !important;
+}
+.markdown-body, .markdown-body * {
+    color: #111 !important;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+    color: #111;
+}
+</style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch("{{ url_for('static', filename='file/About_author.md') }}")
+            .then(res => res.text())
+            .then(md => {
+                var mdRender = window.markdownit({html:true,linkify:true,breaks:true});
+                document.getElementById('about-author-content').innerHTML = mdRender.render(md);
+            })
+            .catch(() => {
+                document.getElementById('about-author-content').innerHTML = '<span class="text-danger">作者信息加载失败</span>';
+            });
+    });
+</script>
 {% endblock %} 

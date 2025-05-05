@@ -135,6 +135,10 @@
         .loading-spinner.hidden {
             display: none;
         }
+        
+        .footer-version {
+            color: var(--text-color) !important;
+        }
     </style>
     {{ moment.include_moment() }}
     {{ moment.locale('zh-cn') }}
@@ -210,18 +214,23 @@
     
     <!-- 页脚 -->
     <footer class="footer">
-        <div class="container">
-            {% if site_config.icp_text %}
-            <p class="mb-0">
-                {% if site_config.icp_link %}
-                <a href="{{ site_config.icp_link }}" target="_blank" class="text-decoration-none">
-                    {{ site_config.icp_text }}
-                </a>
-                {% else %}
-                <span class="text-muted">{{ site_config.icp_text }}</span>
+        <div class="container position-relative">
+            <div class="text-center">
+                {% if site_config.icp_text %}
+                <p class="mb-0">
+                    {% if site_config.icp_link %}
+                    <a href="{{ site_config.icp_link }}" target="_blank" class="text-decoration-none">
+                        {{ site_config.icp_text }}
+                    </a>
+                    {% else %}
+                    <span class="text-muted">{{ site_config.icp_text }}</span>
+                    {% endif %}
+                </p>
                 {% endif %}
-            </p>
-            {% endif %}
+            </div>
+            <div class="position-absolute end-0 top-50 translate-middle-y text-end small pe-2 footer-version">
+                {{ '版本号：' + version or '获取失败' }}
+            </div>
         </div>
     </footer>
 

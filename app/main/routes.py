@@ -15,6 +15,7 @@ import json
 from flask_login import current_user
 import uuid
 from werkzeug.utils import secure_filename
+from app.constants import VERSION
 
 def ensure_upload_folder():
     """确保上传文件夹存在并返回正确的路径"""
@@ -402,3 +403,7 @@ def messages_show():
     } for msg in messages]
     
     return render_template('main/messages_show.html', messages=messages_list) 
+
+@main.app_context_processor
+def inject_version():
+    return dict(version=VERSION) 

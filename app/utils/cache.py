@@ -4,7 +4,7 @@
 """
 
 from functools import wraps
-from flask import current_app
+from flask import current_app, request
 import time
 import json
 from ..models import Cache
@@ -22,8 +22,9 @@ def cache_for(duration=300):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            # 生成缓存键
-            cache_key = f"{f.__name__}:{str(args)}:{str(kwargs)}"
+            # 生成缓存键，包含query参数
+            query_string = "&".join(f"{k}={v}" for k, v in sorted(request.args.items()))
+            cache_key = f"{f.__name__}:{str(args)}:{str(kwargs)}:{query_string}"
             
             try:
                 # 查找缓存

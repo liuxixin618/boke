@@ -302,8 +302,8 @@
     <!-- 使用本地静态资源 -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     <!-- 引入 markdown-it CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css">
+    <script src="{{ url_for('static', filename='js/markdown-it.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/github-markdown.min.css') }}">
     <script>
         // 页面加载完成后移除加载动画
         window.addEventListener('load', function() {

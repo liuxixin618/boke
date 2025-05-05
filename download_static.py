@@ -42,6 +42,16 @@ def main():
         {
             "url": "https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.10.0/font/fonts/bootstrap-icons.woff2",
             "path": static_dir / "fonts" / "bootstrap-icons.woff2"
+        },
+        # markdown-it JS
+        {
+            "url": "https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js",
+            "path": static_dir / "js" / "markdown-it.min.js"
+        },
+        # github-markdown-css
+        {
+            "url": "https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown.min.css",
+            "path": static_dir / "css" / "github-markdown.min.css"
         }
     ]
     

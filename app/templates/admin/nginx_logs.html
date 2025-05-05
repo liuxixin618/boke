@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% block title %}Nginx 日志{% endblock %}
+{% block content %}
+<div class="container mt-4">
+	<div class="mb-3">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">返回仪表盘</a>
+    </div>
+    <h2>Nginx Access Log</h2>
+    <pre style="background:#222; color:#eee; padding:1em; border-radius:6px; max-height:300px; overflow:auto; font-size:13px;">{{ access_content }}</pre>
+    <h2 class="mt-4">Nginx Error Log</h2>
+    <pre style="background:#222; color:#eee; padding:1em; border-radius:6px; max-height:300px; overflow:auto; font-size:13px;">{{ error_content }}</pre>
+    
+</div>
+{% endblock %} 

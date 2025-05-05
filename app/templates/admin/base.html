@@ -78,6 +78,16 @@
                             <i class="bi bi-people"></i> 管理员
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.view_logs' %}active{% endif %}" href="{{ url_for('admin.view_logs') }}">
+                            <i class="bi bi-journal-text"></i> 系统日志
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin.view_nginx_logs' %}active{% endif %}" href="{{ url_for('admin.view_nginx_logs') }}">
+                            <i class="bi bi-journal-text"></i> Nginx日志
+                        </a>
+                    </li>
                 </ul>
                 
                 <div class="navbar-nav">

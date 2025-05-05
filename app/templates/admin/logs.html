@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% block title %}系统日志{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>系统日志</h2>
+    <div class="mb-3">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">返回仪表盘</a>
+    </div>
+    <pre style="background:#222; color:#eee; padding:1em; border-radius:6px; max-height:600px; overflow:auto; font-size:13px;">{{ log_content }}</pre>
+</div>
+{% endblock %} 

@@ -256,9 +256,10 @@ def new_post():
         content = sanitize_string(request.form.get('content'))
         category_ids = request.form.getlist('categories')
         selected_categories = Category.objects(id__in=category_ids)
-        current_app.logger.info(f"开始创建新文章: {title}")
+        current_app.logger.info(f"[日志] 开始创建新文章: {title}")
+        current_app.logger.debug(f"[日志] POST数据: title={title}, content_length={len(content) if content else 0}, category_ids={category_ids}")
         if not title or not content:
-            current_app.logger.warning("创建文章失败：标题或内容为空")
+            current_app.logger.warning("[日志] 创建文章失败：标题或内容为空")
             flash('标题和内容不能为空')
             return render_template('admin/edit_post.html', categories=categories)
         post = Post(
@@ -269,20 +270,21 @@ def new_post():
             updated_at=get_utc_time()
         )
         files = request.files.getlist('attachments')
-        current_app.logger.info(f"处理文章附件，共 {len(files)} 个文件")
+        current_app.logger.info(f"[日志] 处理文章附件，共 {len(files)} 个文件")
         attachments = []
         for file in files:
-            current_app.logger.info(f"处理附件: {file.filename}")
+            current_app.logger.info(f"[日志] 处理附件: {file.filename}")
             file_info = save_file(file)
             if file_info:
                 attachments.append(file_info)
-                current_app.logger.info(f"附件保存成功: {file_info}")
+                current_app.logger.info(f"[日志] 附件保存成功: {file_info}")
         if attachments:
             post.attachments = attachments
         post.save()
-        current_app.logger.info(f"文章创建成功，ID: {post.id}")
+        current_app.logger.info(f"[日志] 文章创建成功，ID: {post.id}")
         flash('文章已创建')
         return redirect(url_for('admin.dashboard'))
+    current_app.logger.info("[日志] 进入新建文章页面")
     return render_template('admin/edit_post.html', categories=categories)
 
 @admin.route('/post/edit/<post_id>', methods=['GET', 'POST'])
@@ -298,10 +300,10 @@ def edit_post(post_id):
     POST请求：处理文章更新
     """
     try:
-        current_app.logger.info(f"开始编辑文章，ID: {post_id}")
+        current_app.logger.info(f"[日志] 开始编辑文章，ID: {post_id}")
         post = Post.objects.get_or_404(id=validate_object_id(post_id))
         categories = Category.objects.order_by('-created_at')
-        current_app.logger.info(f"找到文章: {post.title}")
+        current_app.logger.info(f"[日志] 找到文章: {post.title}")
         
         if request.method == 'POST':
             has_changes = False
@@ -311,38 +313,39 @@ def edit_post(post_id):
             content = sanitize_string(request.form.get('content'))
             category_ids = request.form.getlist('categories')
             selected_categories = Category.objects(id__in=category_ids)
+            current_app.logger.debug(f"[日志] POST数据: title={title}, content_length={len(content) if content else 0}, category_ids={category_ids}")
             
             if not title or not content:
-                current_app.logger.warning("更新文章失败：标题或内容为空")
+                current_app.logger.warning("[日志] 更新文章失败：标题或内容为空")
                 flash('标题和内容不能为空')
                 return render_template('admin/edit_post.html', post=post, categories=categories)
             
             # 记录字段变更
             if post.title != title:
-                current_app.logger.info(f"文章标题更新: {post.title} -> {title}")
+                current_app.logger.info(f"[日志] 文章标题更新: {post.title} -> {title}")
                 has_changes = True
                 post.title = title
                 
             if set(post.categories) != set(selected_categories):
-                current_app.logger.info(f"文章分类更新: {post.categories} -> {list(selected_categories)}")
+                current_app.logger.info(f"[日志] 文章分类更新: {post.categories} -> {list(selected_categories)}")
                 has_changes = True
                 post.categories = list(selected_categories)
                 
             if post.content != content:
-                current_app.logger.info("文章内容已更新")
+                current_app.logger.info("[日志] 文章内容已更新")
                 has_changes = True
                 post.content = content
             
             # 处理新上传的附件
             files = request.files.getlist('attachments')
-            current_app.logger.info(f"处理新上传附件，共 {len(files)} 个文件")
+            current_app.logger.info(f"[日志] 处理新上传附件，共 {len(files)} 个文件")
             
             for file in files:
                 if file.filename:
-                    current_app.logger.info(f"处理新附件: {file.filename}")
+                    current_app.logger.info(f"[日志] 处理新附件: {file.filename}")
                     file_info = save_file(file)
                     if file_info:
-                        current_app.logger.info(f"新附件保存成功: {file_info}")
+                        current_app.logger.info(f"[日志] 新附件保存成功: {file_info}")
                         has_changes = True
                         if not post.attachments:
                             post.attachments = []
@@ -350,7 +353,7 @@ def edit_post(post_id):
             
             # 更新现有附件的文件大小
             if post.attachments:
-                current_app.logger.info("检查现有附件的文件大小")
+                current_app.logger.info("[日志] 检查现有附件的文件大小")
                 upload_folder = ensure_upload_folder()
                 for attachment in post.attachments:
                     if 'file_size' not in attachment:
@@ -358,22 +361,22 @@ def edit_post(post_id):
                         if file_path.exists():
                             old_size = attachment.get('file_size', 'unknown')
                             attachment['file_size'] = os.path.getsize(str(file_path))
-                            current_app.logger.info(f"更新附件 {attachment['filename']} 的文件大小: {old_size} -> {attachment['file_size']}")
+                            current_app.logger.info(f"[日志] 更新附件 {attachment['filename']} 的文件大小: {old_size} -> {attachment['file_size']}")
                             has_changes = True
             
             if has_changes:
                 post.updated_at = get_utc_time()
                 post.save()
-                current_app.logger.info(f"文章更新成功，ID: {post_id}")
+                current_app.logger.info(f"[日志] 文章更新成功，ID: {post_id}")
                 flash('文章已更新')
             else:
-                current_app.logger.info("文章无变更")
+                current_app.logger.info("[日志] 文章无变更")
             return redirect(url_for('admin.dashboard'))
-        
+        current_app.logger.info("[日志] 进入编辑文章页面")
         return render_template('admin/edit_post.html', post=post, categories=categories)
         
     except Exception as e:
-        current_app.logger.error(f"编辑文章出错，ID: {post_id}, 错误: {str(e)}")
+        current_app.logger.error(f"[日志] 编辑文章出错，ID: {post_id}, 错误: {str(e)}")
         flash('操作失败，请重试')
         return redirect(url_for('admin.dashboard'))
 
@@ -830,4 +833,38 @@ def category_delete(category_id):
         return redirect(url_for('admin.category_list'))
     category.delete()
     flash('分类已删除')
-    return redirect(url_for('admin.category_list')) 
+    return redirect(url_for('admin.category_list'))
+
+@admin.route('/logs')
+@login_required
+def view_logs():
+    """后台日志查看页面"""
+    import os
+    log_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '..', 'logs', 'app.log')
+    try:
+        with open(log_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()[-500:]
+            log_content = ''.join(lines)
+    except Exception as e:
+        log_content = f'无法读取日志文件: {e}'
+    return render_template('admin/logs.html', log_content=log_content)
+
+@admin.route('/nginx_logs')
+@login_required
+def view_nginx_logs():
+    """Nginx 日志查看页面"""
+    access_log_path = '/var/www/blog/logs/access.log'
+    error_log_path = '/var/www/blog/logs/error.log'
+    try:
+        with open(access_log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            access_lines = f.readlines()[-500:]
+            access_content = ''.join(access_lines)
+    except Exception as e:
+        access_content = f'无法读取 access.log: {e}'
+    try:
+        with open(error_log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            error_lines = f.readlines()[-500:]
+            error_content = ''.join(error_lines)
+    except Exception as e:
+        error_content = f'无法读取 error.log: {e}'
+    return render_template('admin/nginx_logs.html', access_content=access_content, error_content=error_content) 

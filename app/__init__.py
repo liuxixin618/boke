@@ -14,6 +14,9 @@ from flask_wtf.csrf import CSRFProtect
 from config import config
 from .models import Admin, db, SiteConfig
 from .context_processors import site_config
+import logging
+from logging.handlers import RotatingFileHandler
+import os
 
 db = MongoEngine()
 login_manager = LoginManager()
@@ -177,5 +180,14 @@ def create_app(config_name='development'):
     # 初始化网站配置
     with app.app_context():
         init_site_config()
+
+    # 日志文件配置
+    logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+    if not os.path.exists(logs_dir):
+        os.makedirs(logs_dir)
+    file_handler = RotatingFileHandler(os.path.join(logs_dir, 'app.log'), maxBytes=10240, backupCount=10, encoding='utf-8')
+    file_handler.setFormatter(logging.Formatter('[%(asctime)s] %(levelname)s in %(module)s: %(message)s'))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
 
     return app 

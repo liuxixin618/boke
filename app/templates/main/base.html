@@ -214,8 +214,29 @@
     
     <!-- 页脚 -->
     <footer class="footer">
-        <div class="container position-relative">
-            <div class="text-center">
+        <div class="container">
+            <!-- 大屏布局：备案信息居中，版本号右侧 -->
+            <div class="d-none d-md-flex justify-content-center align-items-center position-relative">
+                <div class="flex-grow-1"></div>
+                <div class="text-center w-100">
+                    {% if site_config.icp_text %}
+                    <p class="mb-0">
+                        {% if site_config.icp_link %}
+                        <a href="{{ site_config.icp_link }}" target="_blank" class="text-decoration-none">
+                            {{ site_config.icp_text }}
+                        </a>
+                        {% else %}
+                        <span class="text-muted">{{ site_config.icp_text }}</span>
+                        {% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="footer-version pe-2" style="position:absolute;right:0;">
+                    版本号：{{ version or '获取失败' }}
+                </div>
+            </div>
+            <!-- 小屏布局：备案信息和版本号上下堆叠 -->
+            <div class="d-block d-md-none text-center">
                 {% if site_config.icp_text %}
                 <p class="mb-0">
                     {% if site_config.icp_link %}
@@ -227,9 +248,9 @@
                     {% endif %}
                 </p>
                 {% endif %}
-            </div>
-            <div class="position-absolute end-0 top-50 translate-middle-y text-end small pe-2 footer-version">
-                {{ '版本号：' + version or '获取失败' }}
+                <div class="footer-version mt-1">
+                    版本号：{{ version or '获取失败' }}
+                </div>
             </div>
         </div>
     </footer>

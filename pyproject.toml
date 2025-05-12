@@ -1,0 +1,10 @@
+[tool.black]
+line-length = 100
+skip-string-normalization = true
+exclude = '''
+/(
+    venv
+  | logs
+  | __pycache__
+)/
+''' 

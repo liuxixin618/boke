@@ -6,9 +6,11 @@ from logging.handlers import TimedRotatingFileHandler
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
+
 @app.shell_context_processor
 def make_shell_context():
     return dict(db=db, Admin=Admin, Post=Post, SiteConfig=SiteConfig)
+
 
 if __name__ == '__main__':
     # 日志分级与轮转配置
@@ -26,4 +28,4 @@ if __name__ == '__main__':
             app.logger.removeHandler(h)
         app.logger.addHandler(file_handler)
     app.logger.setLevel(logging.INFO)
-    app.run() 
+    app.run()

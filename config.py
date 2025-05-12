@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key'
     # MongoDB 配置
@@ -9,7 +10,7 @@ class Config:
         'host': os.environ.get('MONGODB_HOST', 'localhost'),
         'port': int(os.environ.get('MONGODB_PORT', 27017)),
         'username': os.environ.get('MONGODB_USERNAME'),
-        'password': os.environ.get('MONGODB_PASSWORD')
+        'password': os.environ.get('MONGODB_PASSWORD'),
     }
     # 添加编码配置
     JSON_AS_ASCII = False  # 确保 JSON 响应可以包含非 ASCII 字符
@@ -20,19 +21,22 @@ class Config:
     def init_app(app):
         pass
 
+
 class DevelopmentConfig(Config):
     DEBUG = True
+
 
 class ProductionConfig(Config):
     DEBUG = False
 
+
 config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig
+    'default': DevelopmentConfig,
 }
 
 LOG_DIR = os.path.join(os.path.dirname(__file__), 'logs')
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
-LOG_FILE = os.path.join(LOG_DIR, 'app.log') 
+LOG_FILE = os.path.join(LOG_DIR, 'app.log')

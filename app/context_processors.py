@@ -1,6 +1,7 @@
 from flask import current_app
 from .models import SiteConfig
 
+
 def site_config():
     """
     提供网站配置给模板
@@ -8,4 +9,4 @@ def site_config():
     configs = {}
     for config in SiteConfig.objects.all():
         configs[config.key] = config.value
-    return {'site_config': configs} 
+    return {'site_config': configs}

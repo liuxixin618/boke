@@ -14,10 +14,11 @@ from mongoengine.errors import ValidationError
 
 db = MongoEngine()
 
+
 def get_utc_time():
     """
     获取当前的UTC时间
-    
+
     Returns:
         datetime: 当前的UTC时间对象
     """
@@ -27,73 +28,69 @@ def get_utc_time():
     current_app.logger.debug(f"当前UTC时间: {now}")
     return now
 
+
 def convert_to_local_time(utc_dt):
     """
     将UTC时间转换为本地时间（中国时区）
-    
+
     Args:
         utc_dt (datetime): UTC时间对象
-        
+
     Returns:
         datetime: 本地时间对象
     """
     if utc_dt is None:
         return None
-        
+
     # 如果输入时间没有时区信息，假定为UTC时间
     if utc_dt.tzinfo is None:
         utc_dt = pytz.UTC.localize(utc_dt)
         # current_app.logger.debug(f"添加UTC时区信息: {utc_dt}")
-    
+
     # 转换为本地时间
     local_tz = pytz.timezone(current_app.config['TIMEZONE'])
     local_dt = utc_dt.astimezone(local_tz)
     # current_app.logger.debug(f"转换时间: UTC {utc_dt} -> 本地 {local_dt}")
     return local_dt
 
+
 class Admin(db.Document, UserMixin):
-    """管理员模型"""
+    """管理员模型，包含用户名和密码哈希。"""
+
     username = db.StringField(required=True, unique=True)
     password_hash = db.StringField(required=True)
 
-    meta = {
-        'collection': 'user',
-        'indexes': ['username']
-    }
+    meta = {'collection': 'user', 'indexes': ['username']}
 
     def set_password(self, password):
-        """设置密码"""
-        current_app.logger.info(f"设置管理员 {self.username} 的密码")
+        """设置管理员密码。"""
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        """验证密码"""
-        result = check_password_hash(self.password_hash, password)
-        current_app.logger.info(f"验证管理员 {self.username} 的密码: {'成功' if result else '失败'}")
-        return result
+        """验证管理员密码。"""
+        return check_password_hash(self.password_hash, password)
 
     def save(self, *args, **kwargs):
-        """保存管理员信息"""
-        current_app.logger.info(f"保存管理员信息: {self.username}")
+        """保存管理员信息。"""
         return super(Admin, self).save(*args, **kwargs)
 
+
 class Category(db.Document):
-    """分类模型"""
+    """分类模型。"""
+
     name = db.StringField(required=True, unique=True)
     description = db.StringField()
     created_at = db.DateTimeField(default=get_utc_time)
 
-    meta = {
-        'collection': 'category',
-        'ordering': ['-created_at'],
-        'indexes': ['name']
-    }
+    meta = {'collection': 'category', 'ordering': ['-created_at'], 'indexes': ['name']}
 
     def __str__(self):
         return self.name
 
+
 class Post(db.Document):
-    """文章模型"""
+    """文章模型，支持普通和Markdown文章。"""
+
     title = db.StringField(required=True)
     content = db.StringField(required=True)
     categories = db.ListField(db.ReferenceField('Category'))
@@ -102,50 +99,40 @@ class Post(db.Document):
     is_visible = db.BooleanField(default=True)
     is_pinned = db.BooleanField(default=False)
     attachments = db.ListField(db.DictField())
-    is_markdown = db.BooleanField(default=False)  # 是否为Markdown文章
-    md_file_path = db.StringField()  # Markdown文件路径
+    is_markdown = db.BooleanField(default=False)
+    md_file_path = db.StringField()
 
     meta = {
         'collection': 'post',
         'ordering': ['-is_pinned', '-updated_at', '-created_at'],
-        'indexes': [
-            'title',
-            'categories',
-            'created_at',
-            'updated_at',
-            'is_visible',
-            'is_pinned'
-        ]
+        'indexes': ['title', 'categories', 'created_at', 'updated_at', 'is_visible', 'is_pinned'],
     }
 
     def save(self, *args, **kwargs):
-        """保存文章"""
+        """保存文章，自动更新时间。"""
         if not self.created_at:
             self.created_at = get_utc_time()
-            current_app.logger.info(f"创建新文章: {self.title}")
-        else:
-            current_app.logger.info(f"更新文章: {self.title}")
-        
         self.updated_at = get_utc_time()
         return super(Post, self).save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        """删除文章"""
-        current_app.logger.info(f"删除文章: {self.title}")
+        """删除文章。"""
         return super(Post, self).delete(*args, **kwargs)
 
     @property
     def local_created_at(self):
-        """获取本地时区的创建时间"""
+        """获取本地时区的创建时间。"""
         return convert_to_local_time(self.created_at)
 
     @property
     def local_updated_at(self):
-        """获取本地时区的更新时间"""
+        """获取本地时区的更新时间。"""
         return convert_to_local_time(self.updated_at)
+
 
 class Attachment(db.Document):
     """附件模型"""
+
     filename = db.StringField(required=True)
     original_filename = db.StringField(required=True)
     file_path = db.StringField(required=True)
@@ -154,14 +141,7 @@ class Attachment(db.Document):
     upload_time = db.DateTimeField(default=get_utc_time)
     post = db.ReferenceField('Post')
 
-    meta = {
-        'collection': 'attachment',
-        'indexes': [
-            'filename',
-            'post',
-            'upload_time'
-        ]
-    }
+    meta = {'collection': 'attachment', 'indexes': ['filename', 'post', 'upload_time']}
 
     def save(self, *args, **kwargs):
         """保存附件信息"""
@@ -178,18 +158,17 @@ class Attachment(db.Document):
         """获取本地时区的上传时间"""
         return convert_to_local_time(self.upload_time)
 
+
 class SiteConfig(db.Document):
     """网站配置模型"""
+
     key = db.StringField(required=True, unique=True)  # 配置项键名
     value = db.DynamicField(required=True)  # 配置项值
     description = db.StringField()  # 配置项描述
     type = db.StringField(required=True)  # 配置项类型
-    
-    meta = {
-        'collection': 'site_config',
-        'indexes': ['key']
-    }
-    
+
+    meta = {'collection': 'site_config', 'indexes': ['key']}
+
     @classmethod
     def get_config(cls, key, default=None):
         """获取配置项值"""
@@ -197,7 +176,7 @@ class SiteConfig(db.Document):
         if not config:
             return default
         return config.get_typed_value()
-    
+
     @classmethod
     def get_configs(cls):
         """获取所有配置项"""
@@ -205,7 +184,7 @@ class SiteConfig(db.Document):
         for config in cls.objects:
             configs[config.key] = config.get_typed_value()
         return configs
-    
+
     @classmethod
     def get_message_configs(cls):
         """获取留言相关配置"""
@@ -214,7 +193,7 @@ class SiteConfig(db.Document):
             'max_messages_per_ip',
             'messages_per_page',
             'nav_message_text',
-            'nav_message_visible'
+            'nav_message_visible',
         ]
         configs = {}
         for key in keys:
@@ -222,12 +201,12 @@ class SiteConfig(db.Document):
             if config:
                 configs[key] = config.get_typed_value()
         return configs
-    
+
     def get_typed_value(self):
         """获取类型转换后的值"""
         if not self.value:
             return None
-            
+
         try:
             if self.type == 'int':
                 return int(self.value)
@@ -243,7 +222,7 @@ class SiteConfig(db.Document):
                 return self.value
         except (ValueError, TypeError):
             return None
-    
+
     def set_value(self, value):
         """设置配置项值"""
         if self.type == 'int':
@@ -260,8 +239,10 @@ class SiteConfig(db.Document):
         else:
             self.value = value
 
+
 class Message(db.Document):
     """留言模型"""
+
     content = db.StringField(required=True)  # 留言内容
     contact = db.StringField()  # 联系方式
     allow_public = db.BooleanField(default=True)  # 是否允许公开
@@ -273,11 +254,7 @@ class Message(db.Document):
     meta = {
         'collection': 'message',
         'ordering': ['-created_at'],
-        'indexes': [
-            'ip_address',
-            'created_at',
-            'is_public'
-        ]
+        'indexes': ['ip_address', 'created_at', 'is_public'],
     }
 
     @property
@@ -285,20 +262,21 @@ class Message(db.Document):
         """获取本地时区的创建时间"""
         return convert_to_local_time(self.created_at)
 
+
 class IPRecord(db.Document):
     """IP记录模型"""
+
     ip_address = db.StringField(required=True, unique=True)  # IP地址
     message_count = db.IntField(default=0)  # 留言数量
     is_blocked = db.BooleanField(default=False)  # 是否被禁止留言
     last_message_at = db.DateTimeField()  # 最后留言时间
 
-    meta = {
-        'collection': 'ip_record',
-        'indexes': ['ip_address', 'is_blocked']
-    } 
+    meta = {'collection': 'ip_record', 'indexes': ['ip_address', 'is_blocked']}
+
 
 class Cache(db.Document):
     """缓存集合"""
+
     key = db.StringField(required=True, unique=True)  # 缓存键
     value = db.StringField(required=True)  # 缓存值（JSON字符串）
     created_at = db.DateTimeField(default=datetime.utcnow)  # 创建时间
@@ -307,20 +285,22 @@ class Cache(db.Document):
         'collection': 'caches',
         'indexes': [
             'key',
-            {'fields': ['created_at'], 'expireAfterSeconds': 3600}  # 1小时后自动过期
-        ]
-    } 
+            {'fields': ['created_at'], 'expireAfterSeconds': 3600},  # 1小时后自动过期
+        ],
+    }
+
 
 class SiteShare(db.Document):
     """好站分享模型"""
-    name = db.StringField(required=True)         # 网站名
-    url = db.StringField(required=True)          # 跳转链接
-    is_visible = db.BooleanField(default=True)   # 是否显示
-    is_pinned = db.BooleanField(default=False)   # 是否置顶
+
+    name = db.StringField(required=True)  # 网站名
+    url = db.StringField(required=True)  # 跳转链接
+    is_visible = db.BooleanField(default=True)  # 是否显示
+    is_pinned = db.BooleanField(default=False)  # 是否置顶
     created_at = db.DateTimeField(default=get_utc_time)
 
     meta = {
         'collection': 'site_share',
         'ordering': ['-is_pinned', '-created_at'],
-        'indexes': ['name', 'is_visible', 'is_pinned']
-    } 
+        'indexes': ['name', 'is_visible', 'is_pinned'],
+    }

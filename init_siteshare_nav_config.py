@@ -17,14 +17,14 @@ with app.app_context():
             'key': 'nav_siteshare_text',
             'value': '好站分享',
             'description': '好站分享导航文本',
-            'type': 'str'
+            'type': 'str',
         },
         {
             'key': 'nav_siteshare_visible',
             'value': 'true',
             'description': '是否显示好站分享导航',
-            'type': 'bool'
-        }
+            'type': 'bool',
+        },
     ]
 
     for item in configs:
@@ -34,11 +34,11 @@ with app.app_context():
                 key=item['key'],
                 value=item['value'],
                 description=item['description'],
-                type=item['type']
+                type=item['type'],
             )
             config.save()
             print(f"已创建配置项: {item['key']} = {item['value']}")
         else:
             print(f"已存在配置项: {item['key']} = {config.value}")
 
-    print("好站分享导航栏配置检查完毕。") 
+    print("好站分享导航栏配置检查完毕。")

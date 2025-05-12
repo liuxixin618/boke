@@ -8,6 +8,7 @@
     <!-- 使用本地静态资源 -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/dark-mode.css') }}" rel="stylesheet">
     <!-- 内联关键 CSS -->
     <style>
         /* 首屏关键样式内联，避免等待 CSS 加载 */
@@ -217,6 +218,13 @@
                     </li>
                     {% endif %}
                 </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button id="toggle-dark-mode" class="btn btn-outline-secondary ms-2" title="夜间/日间模式切换" style="border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                            <span id="dark-mode-icon" style="font-size:1.3rem;">🌙</span>
+                        </button>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
@@ -331,6 +339,36 @@
         document.getElementById('version-announcement-link').addEventListener('click', function(e){e.preventDefault();showVersionAnnouncement();});
         var mobileLink = document.getElementById('version-announcement-link-mobile');
         if(mobileLink) mobileLink.addEventListener('click', function(e){e.preventDefault();showVersionAnnouncement();});
+
+        // 页面加载动画
+        window.addEventListener('DOMContentLoaded', function() {
+            document.body.classList.add('loaded');
+        });
+        // 夜间模式切换逻辑
+        (function() {
+            const btn = document.getElementById('toggle-dark-mode');
+            const icon = document.getElementById('dark-mode-icon');
+            const darkClass = 'dark-mode';
+            // 检查localStorage
+            function applyMode() {
+                const mode = localStorage.getItem('site-dark-mode');
+                if (mode === 'dark') {
+                    document.body.classList.add(darkClass);
+                    icon.textContent = '☀️';
+                } else {
+                    document.body.classList.remove(darkClass);
+                    icon.textContent = '🌙';
+                }
+            }
+            applyMode();
+            if (btn) {
+                btn.onclick = function() {
+                    const isDark = document.body.classList.toggle(darkClass);
+                    localStorage.setItem('site-dark-mode', isDark ? 'dark' : 'light');
+                    icon.textContent = isDark ? '☀️' : '🌙';
+                };
+            }
+        })();
     </script>
 </body>
 </html> 

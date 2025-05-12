@@ -32,6 +32,17 @@
 .markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4, .markdown-body h5, .markdown-body h6 {
     color: #111;
 }
+/* 夜间模式下 markdown-body 适配 */
+body.dark-mode .markdown-body {
+    background: #23272a !important;
+    color: #e8e6e3 !important;
+}
+body.dark-mode .markdown-body, body.dark-mode .markdown-body * {
+    color: #e8e6e3 !important;
+}
+body.dark-mode .markdown-body h1, body.dark-mode .markdown-body h2, body.dark-mode .markdown-body h3, body.dark-mode .markdown-body h4, body.dark-mode .markdown-body h5, body.dark-mode .markdown-body h6 {
+    color: #fff !important;
+}
 </style>
 <script>
     document.addEventListener('DOMContentLoaded', function() {

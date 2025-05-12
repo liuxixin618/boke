@@ -1,0 +1,82 @@
+{% extends 'admin/base.html' %}
+{% block content %}
+<div class="container my-4">
+  <h2 class="mb-4"><i class="bi bi-chat-dots"></i> 聊天室后台管理</h2>
+  <ul class="nav nav-tabs mb-3" id="chatAdminTab" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="status-tab" data-bs-toggle="tab" data-bs-target="#status" type="button" role="tab">聊天室状态</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="sensitive-tab" data-bs-toggle="tab" data-bs-target="#sensitive" type="button" role="tab">敏感词管理</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="blacklist-tab" data-bs-toggle="tab" data-bs-target="#blacklist" type="button" role="tab">黑名单管理</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="messages-tab" data-bs-toggle="tab" data-bs-target="#messages" type="button" role="tab">消息管理</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#users" type="button" role="tab">用户管理</button>
+    </li>
+  </ul>
+  <div class="tab-content" id="chatAdminTabContent">
+    <!-- 聊天室状态管理 -->
+    <div class="tab-pane fade show active" id="status" role="tabpanel">
+      <form id="chat-status-form" class="mb-3">
+        <div class="mb-2">
+          <label class="form-label">聊天室状态</label>
+          <select class="form-select" id="chat-status-select" name="status">
+            <option value="1">开启</option>
+            <option value="0">关闭</option>
+            <option value="2">时间段开启</option>
+          </select>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">开放时间段（如 08:00-20:00）</label>
+          <input type="text" class="form-control" id="chat-open-time" name="open_time" placeholder="08:00">
+          <input type="text" class="form-control mt-1" id="chat-close-time" name="close_time" placeholder="20:00">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">关闭时自定义文本</label>
+          <input type="text" class="form-control" id="chat-custom-text" name="custom_text">
+        </div>
+        <div class="mb-2">
+          <label class="form-label">预计开放时间</label>
+          <input type="text" class="form-control" id="chat-expected-open-time" name="expected_open_time">
+        </div>
+        <button type="submit" class="btn btn-primary">保存设置</button>
+      </form>
+    </div>
+    <!-- 敏感词管理 -->
+    <div class="tab-pane fade" id="sensitive" role="tabpanel">
+      <form id="add-sensitive-form" class="d-flex mb-3">
+        <input type="text" class="form-control me-2" id="new-sensitive-word" placeholder="新增敏感词">
+        <button type="submit" class="btn btn-success">添加</button>
+      </form>
+      <ul class="list-group" id="sensitive-list">
+        <!-- 敏感词列表 -->
+      </ul>
+    </div>
+    <!-- 黑名单管理 -->
+    <div class="tab-pane fade" id="blacklist" role="tabpanel">
+      <ul class="list-group" id="blacklist-list">
+        <!-- 黑名单用户列表 -->
+      </ul>
+    </div>
+    <!-- 消息管理 -->
+    <div class="tab-pane fade" id="messages" role="tabpanel">
+      <ul class="list-group" id="messages-list">
+        <!-- 最近消息列表 -->
+      </ul>
+    </div>
+    <!-- 用户管理 -->
+    <div class="tab-pane fade" id="users" role="tabpanel">
+      <ul class="list-group" id="users-list">
+        <!-- 用户列表 -->
+      </ul>
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="/static/css/bootstrap-icons.css">
+<script src="/static/js/chat_admin.js"></script>
+{% endblock %} 

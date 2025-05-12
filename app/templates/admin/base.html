@@ -93,6 +93,11 @@
                             <i class="bi bi-link-45deg"></i> 好站分享
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'admin_chat.chat_admin' %}active{% endif %}" href="{{ url_for('admin_chat.chat_admin') }}">
+                            <i class="bi bi-chat-dots"></i> 聊天室管理
+                        </a>
+                    </li>
                 </ul>
                 
                 <div class="navbar-nav">

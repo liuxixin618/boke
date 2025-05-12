@@ -6,7 +6,7 @@ class Config:
     # MongoDB 配置
     MONGODB_SETTINGS = {
         'db': os.environ.get('MONGODB_DB', 'personal_website'),
-        'host': os.environ.get('MONGODB_HOST', 'localhost'),
+        'host': os.environ.get('MONGODB_HOST', '127.0.0.1'),
         'port': int(os.environ.get('MONGODB_PORT', 27017)),
         'username': os.environ.get('MONGODB_USERNAME'),
         'password': os.environ.get('MONGODB_PASSWORD')

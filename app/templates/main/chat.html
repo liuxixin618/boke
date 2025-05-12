@@ -1,0 +1,47 @@
+{% extends 'main/base.html' %}
+{% block content %}
+<div class="container my-4" id="chatroom">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-chat-dots"></i> 在线聊天室</span>
+          <span id="online-count" class="badge bg-success">在线人数: 0</span>
+        </div>
+        <div class="card-body p-0" style="height: 400px; overflow-y: auto; background: #f8f9fa;" id="chat-messages">
+          <!-- 聊天消息区 -->
+        </div>
+        <div class="card-footer">
+          <div id="chat-status" class="mb-2 text-danger"></div>
+          <div id="nickname-input-area" class="mb-2">
+            <input type="text" id="nickname" class="form-control" placeholder="请输入昵称" maxlength="20">
+            <button class="btn btn-primary mt-2 w-100" id="join-chat">进入聊天室</button>
+          </div>
+          <div id="chat-input-area" style="display:none;">
+            <div class="d-flex align-items-center mb-2">
+              <img id="user-avatar" src="" alt="头像" class="rounded-circle me-2" width="40" height="40">
+              <span id="user-nickname" class="fw-bold"></span>
+              <span id="user-gender" class="ms-2 text-secondary"></span>
+              <button class="btn btn-outline-danger btn-sm ms-auto" id="logout-btn">退出登录</button>
+            </div>
+            <textarea id="chat-input" class="form-control mb-2" rows="2" maxlength="500" placeholder="输入消息，支持emoji和超链接"></textarea>
+            <div class="d-flex align-items-center">
+              <div class="form-check me-2">
+                <input class="form-check-input" type="checkbox" id="enter-send">
+                <label class="form-check-label" for="enter-send">回车发送消息</label>
+              </div>
+              <button class="btn btn-primary ms-auto" id="send-btn" title="CTRL+Enter发送消息">发送</button>
+            </div>
+            <div class="form-text text-end"><span id="input-length">0</span>/500</div>
+          </div>
+        </div>
+      </div>
+      <div id="chatroom-custom-text" class="mt-3 text-center text-muted"></div>
+    </div>
+  </div>
+</div>
+<link rel="stylesheet" href="/static/css/bootstrap-icons.css">
+<script src="https://cdn.jsdelivr.net/npm/emoji-js@3.6.0/lib/emoji.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.7.5/dist/socket.io.min.js"></script>
+<script src="/static/js/chat.js"></script>
+{% endblock %} 

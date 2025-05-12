@@ -17,6 +17,7 @@ from .context_processors import site_config
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from flask_socketio import SocketIO
 
 db = MongoEngine()
 login_manager = LoginManager()
@@ -32,6 +33,8 @@ limiter = Limiter(
     default_limits=["200 per day", "50 per hour"]
 )
 csrf = CSRFProtect()
+
+socketio = SocketIO(cors_allowed_origins="*", async_mode="eventlet")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -61,6 +64,7 @@ def create_app(config_name='development'):
     moment.init_app(app)
     limiter.init_app(app)
     csrf.init_app(app)
+    socketio.init_app(app)
 
     # 注册上下文处理器
     app.context_processor(site_config)
@@ -71,6 +75,12 @@ def create_app(config_name='development'):
 
     from .admin import admin as admin_blueprint
     app.register_blueprint(admin_blueprint, url_prefix='/admin')
+
+    # 聊天室蓝图和事件注册
+    from .chat import chat, register_chat_events, admin_chat
+    app.register_blueprint(chat, url_prefix='/chat')
+    app.register_blueprint(admin_chat, url_prefix='/admin')
+    register_chat_events()
 
     def init_site_config():
         """初始化网站配置"""

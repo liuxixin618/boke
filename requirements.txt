@@ -21,6 +21,7 @@ Werkzeug==2.2.3
 WTForms==3.0.1
 Flask-Limiter==2.8.1
 limits==2.8.0
+Flask-SocketIO==5.3.5
 
 # Optional packages (Linux/Unix only)
 uWSGI==2.0.28

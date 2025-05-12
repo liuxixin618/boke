@@ -10,6 +10,7 @@
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/bootstrap-icons.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/dark-mode.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/skeleton.css') }}" rel="stylesheet">
     <!-- 内联关键 CSS -->
     <style>
         /* 首屏关键样式内联，避免等待 CSS 加载 */
@@ -372,4 +373,5 @@
         })();
     </script>
 </body>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </html> 

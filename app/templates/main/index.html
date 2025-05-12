@@ -34,6 +34,13 @@
     <!-- 文章列表部分 -->
     <div class="row">
         <div class="col-12">
+            <div id="skeleton" class="skeleton-container">
+                <div class="skeleton-title"></div>
+                <div class="skeleton-paragraph"></div>
+                <div class="skeleton-paragraph"></div>
+                <div class="skeleton-paragraph"></div>
+            </div>
+            <div id="real-content" style="display:none;">
             {% if request.args.get('search') %}
             <div class="alert alert-info">
                 搜索结果：{{ posts.total }} 篇文章
@@ -50,7 +57,7 @@
             {% endif %}
 
             {% for post in posts.items %}
-            <div class="card mb-4">
+            <div class="card mb-4 fade-in">
                 <div class="card-body">
                     {% if post.is_pinned %}
                     <span class="badge bg-danger mb-2">置顶</span>
@@ -73,6 +80,10 @@
                         更新于 {{ moment(post.local_updated_at).format('YYYY-MM-DD HH:mm:ss') }}
                         {% endif %}
                     </p>
+                    {# 懒加载封面图片 #}
+                    {% if post.cover_url %}
+                    <img data-src="{{ post.cover_url }}" alt="{{ post.title }}" class="lazy-img mb-2" width="100%">
+                    {% endif %}
                     <p class="card-text">{{ post.content[:(site_config.content_preview_length|int)] }}...</p>
                     <a href="{{ url_for('main.post', post_id=post.id, **post_params) }}" class="btn btn-primary btn-sm">阅读全文</a>
                 </div>
@@ -84,6 +95,10 @@
             {% endfor %}
 
             {{ render_pagination(posts, 'main.index') }}
+            </div>
+            <div id="loading-spinner" style="display:none;">
+              <div class="spinner"></div>
+            </div>
         </div>
     </div>
 </div>

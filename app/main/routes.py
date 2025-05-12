@@ -32,7 +32,6 @@ from flask_login import current_user
 import uuid
 from werkzeug.utils import secure_filename
 from app.constants import VERSION
-from werkzeug.exceptions import NotFound
 
 
 def ensure_upload_folder():

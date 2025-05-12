@@ -1,5 +1,4 @@
 import os
-from mongoengine import connect
 from pymongo import MongoClient
 
 # 数据库配置

@@ -10,7 +10,6 @@ from flask_mongoengine import MongoEngine
 from datetime import datetime
 import pytz
 from flask import current_app
-from mongoengine.errors import ValidationError
 
 db = MongoEngine()
 

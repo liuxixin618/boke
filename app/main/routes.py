@@ -16,6 +16,7 @@ from flask_login import current_user
 import uuid
 from werkzeug.utils import secure_filename
 from app.constants import VERSION
+from werkzeug.exceptions import NotFound
 
 def ensure_upload_folder():
     """确保上传文件夹存在并返回正确的路径"""
@@ -441,4 +442,8 @@ def version_announcement():
 
 @main.app_context_processor
 def inject_version():
-    return dict(version=VERSION) 
+    return dict(version=VERSION)
+
+@main.app_errorhandler(404)
+def page_not_found(e):
+    return render_template('main/404.html'), 404 

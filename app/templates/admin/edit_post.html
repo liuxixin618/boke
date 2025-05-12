@@ -39,7 +39,7 @@
                                 <option value="markdown" {% if post and post.is_markdown %}selected{% endif %}>Markdown</option>
                             </select>
                         </div>
-                        <div class="mb-3" id="content_textarea_group">
+                        <div class="mb-3" id="content_textarea_group" style="display: none;">
                             <label for="content" class="form-label">内容</label>
                             <textarea class="form-control" 
                                       id="content" 
@@ -142,16 +142,15 @@ async function deleteAttachment(postId, filename, button) {
 
 // 内容类型切换
 const contentTypeSelect = document.getElementById('content_type');
-const contentTextarea = document.getElementById('content');
-const mdFileGroup = document.getElementById('md_file_group');
 const contentTextareaGroup = document.getElementById('content_textarea_group');
+const mdFileGroup = document.getElementById('md_file_group');
 if (contentTypeSelect) {
     function toggleContentType() {
         if (contentTypeSelect.value === 'markdown') {
-            contentTextarea.disabled = true;
+            contentTextareaGroup.style.display = 'none';
             mdFileGroup.style.display = '';
         } else {
-            contentTextarea.disabled = false;
+            contentTextareaGroup.style.display = '';
             mdFileGroup.style.display = 'none';
         }
     }

@@ -389,11 +389,25 @@ def post(post_id):
     if not post_id:
         flash('无效的文章ID', 'danger')
         return redirect(url_for('main.index'))
-    
     # 查询文章
     post = Post.objects(id=post_id, is_visible=True).first_or_404()
-    
-    return render_template('main/post.html', post=post) 
+    html_content = post.content
+    if getattr(post, 'is_markdown', False) and getattr(post, 'md_file_path', None):
+        try:
+            import markdown
+            with open(post.md_file_path, 'r', encoding='utf-8') as f:
+                md_text = f.read()
+            html_content = markdown.markdown(md_text, extensions=['extra', 'codehilite', 'toc'])
+        except Exception as e:
+            html_content = f'<div class="alert alert-danger">Markdown 渲染失败: {e}</div>'
+    else:
+        # 普通文章内容自动转超链接
+        import re
+        def linkify(text):
+            url_pattern = re.compile(r'(https?://[\w\-./?%&=#:~]+)', re.IGNORECASE)
+            return url_pattern.sub(r'<a href="\1" target="_blank">\1</a>', text)
+        html_content = linkify(html_content)
+    return render_template('main/post.html', post=post, html_content=html_content) 
 
 @main.route('/messages')
 def messages_show():

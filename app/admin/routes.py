@@ -256,18 +256,38 @@ def new_post():
         content = sanitize_string(request.form.get('content'))
         category_ids = request.form.getlist('categories')
         selected_categories = Category.objects(id__in=category_ids)
-        current_app.logger.info(f"[日志] 开始创建新文章: {title}")
-        current_app.logger.debug(f"[日志] POST数据: title={title}, content_length={len(content) if content else 0}, category_ids={category_ids}")
-        if not title or not content:
+        content_type = request.form.get('content_type', 'html')
+        is_markdown = content_type == 'markdown'
+        md_file_path = None
+        # 处理Markdown文件
+        if is_markdown:
+            md_file = request.files.get('md_file')
+            if md_file and md_file.filename:
+                # 文件类型校验
+                if not md_file.filename.lower().endswith('.md'):
+                    flash('只允许上传.md类型的Markdown文件')
+                    return render_template('admin/edit_post.html', categories=categories)
+                filename = secure_filename(md_file.filename)
+                upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+                if not os.path.exists(upload_folder):
+                    os.makedirs(upload_folder)
+                md_file_path = os.path.join(upload_folder, filename)
+                md_file.save(md_file_path)
+            else:
+                flash('请上传Markdown文件')
+                return render_template('admin/edit_post.html', categories=categories)
+        if not title or (not content and not is_markdown):
             current_app.logger.warning("[日志] 创建文章失败：标题或内容为空")
             flash('标题和内容不能为空')
             return render_template('admin/edit_post.html', categories=categories)
         post = Post(
             title=title,
-            content=content,
+            content=content if not is_markdown else '',
             categories=list(selected_categories),
             is_visible=True,
-            updated_at=get_utc_time()
+            updated_at=get_utc_time(),
+            is_markdown=is_markdown,
+            md_file_path=md_file_path
         )
         files = request.files.getlist('attachments')
         current_app.logger.info(f"[日志] 处理文章附件，共 {len(files)} 个文件")
@@ -313,9 +333,36 @@ def edit_post(post_id):
             content = sanitize_string(request.form.get('content'))
             category_ids = request.form.getlist('categories')
             selected_categories = Category.objects(id__in=category_ids)
-            current_app.logger.debug(f"[日志] POST数据: title={title}, content_length={len(content) if content else 0}, category_ids={category_ids}")
+            content_type = request.form.get('content_type', 'html')
+            is_markdown = content_type == 'markdown'
+            md_file_path = post.md_file_path
             
-            if not title or not content:
+            # 处理Markdown文件
+            if is_markdown:
+                md_file = request.files.get('md_file')
+                if md_file and md_file.filename:
+                    # 文件类型校验
+                    if not md_file.filename.lower().endswith('.md'):
+                        flash('只允许上传.md类型的Markdown文件')
+                        return render_template('admin/edit_post.html', post=post, categories=categories)
+                    filename = secure_filename(md_file.filename)
+                    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+                    if not os.path.exists(upload_folder):
+                        os.makedirs(upload_folder)
+                    md_file_path_new = os.path.join(upload_folder, filename)
+                    # 删除旧md文件
+                    if post.md_file_path and os.path.exists(post.md_file_path):
+                        try:
+                            os.remove(post.md_file_path)
+                        except Exception as e:
+                            current_app.logger.warning(f"删除旧Markdown文件失败: {e}")
+                    md_file.save(md_file_path_new)
+                    md_file_path = md_file_path_new
+                elif not md_file_path:
+                    flash('请上传Markdown文件')
+                    return render_template('admin/edit_post.html', post=post, categories=categories)
+            
+            if not title or (not content and not is_markdown):
                 current_app.logger.warning("[日志] 更新文章失败：标题或内容为空")
                 flash('标题和内容不能为空')
                 return render_template('admin/edit_post.html', post=post, categories=categories)
@@ -331,10 +378,18 @@ def edit_post(post_id):
                 has_changes = True
                 post.categories = list(selected_categories)
                 
-            if post.content != content:
+            if post.content != content and not is_markdown:
                 current_app.logger.info("[日志] 文章内容已更新")
                 has_changes = True
                 post.content = content
+            
+            if post.is_markdown != is_markdown:
+                has_changes = True
+                post.is_markdown = is_markdown
+            
+            if post.md_file_path != md_file_path:
+                has_changes = True
+                post.md_file_path = md_file_path
             
             # 处理新上传的附件
             files = request.files.getlist('attachments')

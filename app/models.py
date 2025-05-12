@@ -102,6 +102,8 @@ class Post(db.Document):
     is_visible = db.BooleanField(default=True)
     is_pinned = db.BooleanField(default=False)
     attachments = db.ListField(db.DictField())
+    is_markdown = db.BooleanField(default=False)  # 是否为Markdown文章
+    md_file_path = db.StringField()  # Markdown文件路径
 
     meta = {
         'collection': 'post',

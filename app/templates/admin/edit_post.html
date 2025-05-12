@@ -33,12 +33,26 @@
                         </div>
                         
                         <div class="mb-3">
+                            <label for="content_type" class="form-label">内容类型</label>
+                            <select class="form-select" id="content_type" name="content_type">
+                                <option value="html" {% if post and not post.is_markdown %}selected{% endif %}>普通/HTML</option>
+                                <option value="markdown" {% if post and post.is_markdown %}selected{% endif %}>Markdown</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="content_textarea_group">
                             <label for="content" class="form-label">内容</label>
                             <textarea class="form-control" 
                                       id="content" 
                                       name="content" 
                                       rows="10" 
-                                      required>{{ post.content if post else '' }}</textarea>
+                                      {% if post and post.is_markdown %}disabled{% endif %}>{{ post.content if post else '' }}</textarea>
+                        </div>
+                        <div class="mb-3" id="md_file_group">
+                            <label for="md_file" class="form-label">上传Markdown文件</label>
+                            <input type="file" class="form-control" id="md_file" name="md_file" accept=".md">
+                            {% if post and post.is_markdown and post.md_file_path %}
+                            <div class="form-text">已上传: {{ post.md_file_path }}</div>
+                            {% endif %}
                         </div>
                         
                         <div class="mb-3">
@@ -124,6 +138,26 @@ async function deleteAttachment(postId, filename, button) {
         console.error('Error:', error);
         alert(error.message || '删除失败，请重试');
     }
+}
+
+// 内容类型切换
+const contentTypeSelect = document.getElementById('content_type');
+const contentTextarea = document.getElementById('content');
+const mdFileGroup = document.getElementById('md_file_group');
+const contentTextareaGroup = document.getElementById('content_textarea_group');
+if (contentTypeSelect) {
+    function toggleContentType() {
+        if (contentTypeSelect.value === 'markdown') {
+            contentTextarea.disabled = true;
+            mdFileGroup.style.display = '';
+        } else {
+            contentTextarea.disabled = false;
+            mdFileGroup.style.display = 'none';
+        }
+    }
+    contentTypeSelect.addEventListener('change', toggleContentType);
+    // 初始化
+    toggleContentType();
 }
 </script>
 {% endblock %} 

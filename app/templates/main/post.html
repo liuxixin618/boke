@@ -29,7 +29,7 @@
                         {% endif %}
                     </p>
                     
-                    <div class="card-text mb-4" style="white-space: pre-wrap;">{{ post.content }}</div>
+                    <div class="card-text mb-4" style="white-space: pre-wrap;">{{ html_content|safe }}</div>
                     
                     {% if post.attachments %}
                     <div class="card mb-4">

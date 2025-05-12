@@ -1,0 +1,11 @@
+{% extends "main/base.html" %}
+
+{% block title %}服务器错误 - 500{% endblock %}
+
+{% block content %}
+<div class="container text-center" style="margin-top: 80px;">
+    <h1 class="display-3">500</h1>
+    <p class="lead">服务器遇到错误，请稍后再试。</p>
+    <p>您可以 <a href="{{ url_for('main.index') }}">返回首页</a> 或刷新页面。</p>
+</div>
+{% endblock %} 

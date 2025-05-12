@@ -12,7 +12,6 @@ from flask import (
     request,
     flash,
     jsonify,
-    send_from_directory,
     current_app,
     send_file,
 )
@@ -31,11 +30,9 @@ from ..models import (
     SiteShare,
 )
 from ..utils.security import sanitize_string, validate_object_id
-import uuid
-from pathlib import Path
 from flask_wtf.csrf import validate_csrf
 import glob
-from app.utils.file import ensure_upload_folder, sanitize_filename, save_file
+from app.utils.file import ensure_upload_folder, save_file
 
 
 @admin.route('/')

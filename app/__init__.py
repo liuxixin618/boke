@@ -12,7 +12,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 from config import config
-from .models import Admin, db, SiteConfig
+from .models import Admin, SiteConfig
 from .context_processors import site_config
 import logging
 from logging.handlers import RotatingFileHandler

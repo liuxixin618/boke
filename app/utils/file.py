@@ -2,7 +2,7 @@ import os
 import uuid
 from pathlib import Path
 from flask import current_app
-from werkzeug.utils import secure_filename
+
 
 def ensure_upload_folder():
     """
@@ -26,6 +26,7 @@ def ensure_upload_folder():
         current_app.logger.error(f"Error ensuring upload folder: {str(e)}")
         raise
 
+
 def sanitize_filename(filename):
     """
     清理文件名，保留中文字符
@@ -39,6 +40,7 @@ def sanitize_filename(filename):
         filename = filename.replace(char, '_')
     filename = filename.strip()
     return filename or 'unnamed'
+
 
 def save_file(file):
     """
@@ -80,4 +82,4 @@ def save_file(file):
         return file_info
     except Exception as e:
         current_app.logger.error(f"File save error: {str(e)}")
-        return None 
+        return None

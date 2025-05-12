@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, Union
+from typing import Any, Dict
 from bson import ObjectId
 from flask import abort
 

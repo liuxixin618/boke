@@ -15,6 +15,7 @@ from datetime import datetime, timezone, timedelta
 import uuid
 from pathlib import Path
 from flask_wtf.csrf import validate_csrf, CSRFError
+import glob
 
 def ensure_upload_folder():
     """
@@ -997,4 +998,19 @@ def siteshare_toggle_visible(site_id):
     site = SiteShare.objects(id=site_id).first_or_404()
     site.is_visible = not site.is_visible
     site.save()
-    return redirect(url_for('admin.siteshare_list')) 
+    return redirect(url_for('admin.siteshare_list'))
+
+@admin.route('/logs/clear', methods=['POST'])
+@login_required
+def clear_logs():
+    log_dir = current_app.config.get('LOG_DIR') or os.path.join(os.path.dirname(__file__), '../../logs')
+    log_files = glob.glob(os.path.join(log_dir, '*.log*'))
+    deleted = 0
+    for f in log_files:
+        try:
+            os.remove(f)
+            deleted += 1
+        except Exception as e:
+            current_app.logger.warning(f'清理日志文件失败: {f}, 错误: {e}')
+    flash(f'已清理{deleted}个日志文件', 'success')
+    return redirect(url_for('admin.view_logs')) 

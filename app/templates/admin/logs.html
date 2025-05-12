@@ -5,6 +5,10 @@
     <h2>系统日志</h2>
     <div class="mb-3">
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">返回仪表盘</a>
+        <form method="POST" action="{{ url_for('admin.clear_logs') }}" style="display:inline;" onsubmit="return confirm('确定要清空所有日志文件吗？');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger ms-2">清理日志</button>
+        </form>
     </div>
     <pre style="background:#222; color:#eee; padding:1em; border-radius:6px; max-height:600px; overflow:auto; font-size:13px;">{{ log_content }}</pre>
 </div>

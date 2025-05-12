@@ -14,6 +14,7 @@ from ..utils.security import sanitize_string, sanitize_mongo_query, validate_obj
 from datetime import datetime, timezone, timedelta
 import uuid
 from pathlib import Path
+from flask_wtf.csrf import validate_csrf, CSRFError
 
 def ensure_upload_folder():
     """
@@ -446,15 +447,17 @@ def delete_post(post_id):
         
     删除文章及其所有附件文件
     """
+    # CSRF校验
+    token = request.headers.get('X-CSRFToken') or request.form.get('csrf_token')
+    try:
+        validate_csrf(token)
+    except Exception:
+        return jsonify({'status': 'error', 'message': 'CSRF token missing or invalid'}), 400
     try:
         current_app.logger.info(f"开始删除文章，ID: {post_id}")
         current_app.logger.info(f"请求方法: {request.method}")
         current_app.logger.info(f"请求头: {dict(request.headers)}")
         current_app.logger.info(f"表单数据: {dict(request.form)}")
-        
-        # 验证CSRF token
-        csrf_token = request.form.get('csrf_token') or request.headers.get('X-CSRFToken')
-        current_app.logger.info(f"CSRF Token: {csrf_token}")
         
         post = Post.objects(id=validate_object_id(post_id)).first_or_404()
         current_app.logger.info(f"找到要删除的文章: {post.title}")
@@ -619,15 +622,19 @@ def delete_attachment(post_id, filename):
 @login_required
 def toggle_pin(post_id):
     """切换文章置顶状态"""
+    # CSRF校验
+    token = request.headers.get('X-CSRFToken') or request.form.get('csrf_token')
+    try:
+        validate_csrf(token)
+    except Exception:
+        return jsonify({'success': False, 'message': 'CSRF token missing or invalid'}), 400
     try:
         post = Post.objects(id=post_id).first()
         if not post:
             return jsonify({'success': False, 'message': '文章不存在'})
-        
         # 切换置顶状态
         is_pinned = not post.is_pinned
         Post.objects(id=post_id).update(is_pinned=is_pinned)
-        
         return jsonify({
             'success': True,
             'is_pinned': is_pinned
@@ -640,15 +647,19 @@ def toggle_pin(post_id):
 @login_required
 def toggle_visibility(post_id):
     """切换文章可见性"""
+    # CSRF校验
+    token = request.headers.get('X-CSRFToken') or request.form.get('csrf_token')
+    try:
+        validate_csrf(token)
+    except Exception:
+        return jsonify({'success': False, 'message': 'CSRF token missing or invalid'}), 400
     try:
         post = Post.objects(id=post_id).first()
         if not post:
             return jsonify({'success': False, 'message': '文章不存在'})
-        
         # 切换可见性状态
         is_visible = not post.is_visible
         Post.objects(id=post_id).update(is_visible=is_visible)
-        
         return jsonify({
             'success': True,
             'is_visible': is_visible
